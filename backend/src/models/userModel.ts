@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema(
       default:
         "Welcome to Connect-Hub! A all in one place to share your adventures 🌟, connect with friends 🌍, chat 💬, and more. Let's explore together! 🚀 Please add an appropriate bio to let others know about you.",
     },
+    link: {
+      type: String,
+      default: "",
+    },
     isFrozen: {
       type: Boolean,
       default: false,

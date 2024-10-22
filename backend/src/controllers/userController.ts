@@ -83,37 +83,48 @@ const updateUser = async (req: CustomRequest, res: Response) => {
     name,
     email,
     username,
-    password,
+    currentPassword,
+    newPassword,
     bio,
+    link,
   }: {
     name: string;
     email: string;
     username: string;
-    password: string;
+    currentPassword: string;
+    newPassword: string;
     bio: string;
+    link: string;
   } = req.body;
-  let { profileImg } = req?.body;
+  let { profileImg, coverImg }: { profileImg: string; coverImg: string } =
+    req?.body;
 
   const userId = req?.user?._id;
-  const updateUserId = req?.params?.id;
   try {
     let user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
+    if (newPassword && !currentPassword) {
+      return res.status(400).json({
+        error: "Please provide both current password and new password",
+      });
+    }
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch)
+        return res.status(400).json({ error: "Current password is incorrect" });
+      if (newPassword.length < 8) {
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 8 characters long" });
+      }
 
-    if (updateUserId !== userId?.toString())
-      return res
-        .status(400)
-        .json({ error: "You cannot update other user's profile" });
-
-    if (password) {
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      user.password = hashedPassword;
+      user.password = await bcrypt.hash(newPassword, salt);
     }
 
-    //Upload profile pic to Cloudinary
+    //Upload Img to Cloudinary
     if (profileImg) {
       if (user?.profileImg) {
         const filename = user?.profileImg?.split("/")?.pop()?.split(".")[0];
@@ -121,16 +132,26 @@ const updateUser = async (req: CustomRequest, res: Response) => {
           await cloudinary.uploader.destroy(filename);
         }
       }
+    }
+    if (coverImg) {
+      if (user?.coverImg) {
+        const filename = user?.coverImg?.split("/")?.pop()?.split(".")[0];
+        if (filename) {
+          await cloudinary.uploader.destroy(filename);
+        }
+      }
 
-      const uploadedResponse = await cloudinary.uploader.upload(profileImg);
-      profileImg = uploadedResponse.secure_url;
+      const uploadedResponse = await cloudinary.uploader.upload(coverImg);
+      coverImg = uploadedResponse.secure_url;
     }
 
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
-    user.profileImg = profileImg || user.profileImg;
     user.bio = bio || user.bio;
+    user.link = link || user.link;
+    user.profileImg = profileImg || user.profileImg;
+    user.coverImg = coverImg || user.coverImg;
 
     user = await user.save();
 
@@ -152,7 +173,9 @@ const updateUser = async (req: CustomRequest, res: Response) => {
       email: user.email,
       username: user.username,
       profileImg: user.profileImg,
+      coverImg: user.coverImg,
       bio: user.bio,
+      link: user.link,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
