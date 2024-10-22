@@ -14,6 +14,7 @@ const generateTokenAndSetCookie = (
     httpOnly: true,
     maxAge: 60 * 60 * 1000,
     sameSite: "strict",
+    secure: process.env.NODE_ENV !== "development",
   });
 
   return token;

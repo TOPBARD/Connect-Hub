@@ -21,18 +21,28 @@ const userSchema = new mongoose.Schema(
       minLength: 8,
       required: true,
     },
-    profilePic: {
+    profileImg: {
       type: String,
       default: "",
     },
-    followers: {
-      type: [mongoose.Schema.Types.ObjectId],
-      default: [],
+    coverImg: {
+      type: String,
+      default: "",
     },
-    following: {
-      type: [mongoose.Schema.Types.ObjectId],
-      default: [],
-    },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
     bio: {
       type: String,
       default:
@@ -42,6 +52,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    likedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+        default: [],
+      },
+    ],
   },
   {
     timestamps: true,

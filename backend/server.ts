@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./src/db/connectDB";
 import cookieParser from "cookie-parser";
 import userRoutes from "./src/routes/userRoutes";
+import authRoutes from "./src/routes/authRoutes";
 import postRoutes from "./src/routes/postRoutes";
 import messageRoutes from "./src/routes/messageRoutes";
 import { Response, Request } from "express";
@@ -21,12 +22,13 @@ cloudinary.config({
 });
 
 // Middlewares
-app.use(express.json({ limit: "50mb" })); // To parse JSON data in the req.body
-app.use(express.urlencoded({ extended: true })); // To parse form data in the req.body
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Api Routes
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 

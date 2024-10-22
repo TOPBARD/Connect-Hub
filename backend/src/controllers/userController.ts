@@ -2,142 +2,27 @@ import User from "../models/userModel";
 import Post from "../models/postModel";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import { UserResponse } from "../shared/interface/User";
-import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
+import Notification from "../models/notificationModel";
+import { NotificationAction } from "../shared/enum/notificationAction";
 
 /**
- * Get user profile by username or userId
- * @param req Request object containing the username or userId
- * @param res Response object
+ * Get user profile by username
+ * @param req Request object containing the username
+ * @param res Response object with user data
  */
 const getUserProfile = async (req: Request, res: Response) => {
-  // We will fetch user profile either with username or userId
-  // query is either username or userId
-  const { query } = req?.params;
-
+  const { username } = req?.params;
   try {
-    let user: UserResponse;
-
-    // query is userId
-    if (mongoose.Types.ObjectId.isValid(query)) {
-      user = await User.findOne({ _id: query })
-        .select("-password")
-        .select("-updatedAt");
-    } else {
-      // query is username
-      user = await User.findOne({ username: query })
-        .select("-password")
-        .select("-updatedAt");
-    }
-
+    const user = await User.findOne({ username })
+      .select("-password")
+      .select("-updatedAt");
     if (!user) return res.status(404).json({ error: "User not found" });
-
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-/**
- * Sign up a new user
- * @param req Request object containing user details (name, email, username, password)
- * @param res Response object
- */
-const signupUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email, username, password }: SignupProps = req?.body;
-    if (!name || !email || !username || !password) {
-      res.status(400).json({ error: "Please fill the required fields" });
-    }
-    const user = await User.findOne({ $or: [{ email }, { username }] });
-
-    if (user) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = new User({
-      name,
-      email,
-      username,
-      password: hashedPassword,
-    });
-    addDefaultFollowers(newUser?._id.toString());
-    await newUser.save();
-
-    if (newUser) {
-      res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        username: newUser.username,
-        bio: newUser.bio,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ error: "Invalid user data" });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-/**
- * Log in a user
- * @param req Request object containing user credentials (username, password)
- * @param res Response object
- */
-const loginUser = async (req: Request, res: Response) => {
-  try {
-    const { username, password }: LoginProps = req?.body;
-    if (!username || !password) {
-      res.status(400).json({ error: "Please fill the required fields" });
-    }
-
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ error: "Invalid username or password" });
-    }
-
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect)
-      return res.status(400).json({ error: "Invalid username or password" });
-
-    if (user.isFrozen) {
-      user.isFrozen = false;
-      await user.save();
-    }
-
-    generateTokenAndSetCookie(user?._id, res);
-
-    res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      bio: user?.bio,
-      profilePic: user?.profilePic,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-/**
- * Log out a user
- * @param req Request object
- * @param res Response object
- */
-const logoutUser = (req: Request, res: Response) => {
-  try {
-    res.cookie("jwtAuthToken", "", { maxAge: 1 });
-    res.status(200).json({ message: "User logged out successfully" });
-  } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -147,7 +32,7 @@ const logoutUser = (req: Request, res: Response) => {
  * @param req Request object containing the userId of the user to follow/unfollow
  * @param res Response object
  */
-const followUser = async (req: CustomRequest, res: Response) => {
+const followUnfollowUser = async (req: CustomRequest, res: Response) => {
   try {
     const { id } = req.params;
     const currentUserId = req?.user?._id;
@@ -170,12 +55,18 @@ const followUser = async (req: CustomRequest, res: Response) => {
       // Unfollow user
       await User.findByIdAndUpdate(id, { $pull: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $pull: { following: id } });
-      res.status(200).json({ message: "User unfollowed successfully" });
+      res.status(200).json({ message: "User Unfollowed Successfully" });
     } else {
       // Follow user
       await User.findByIdAndUpdate(id, { $push: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $push: { following: id } });
-      res.status(200).json({ message: "User followed successfully" });
+      const newNotification = new Notification({
+        type: NotificationAction.FOLLOW,
+        from: currentUserId,
+        to: userToModify?._id,
+      });
+      await newNotification.save();
+      res.status(200).json({ message: "User Followed Successfully" });
     }
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -201,7 +92,7 @@ const updateUser = async (req: CustomRequest, res: Response) => {
     password: string;
     bio: string;
   } = req.body;
-  let { profilePic } = req?.body;
+  let { profileImg } = req?.body;
 
   const userId = req?.user?._id;
   const updateUserId = req?.params?.id;
@@ -223,33 +114,33 @@ const updateUser = async (req: CustomRequest, res: Response) => {
     }
 
     //Upload profile pic to Cloudinary
-    if (profilePic) {
-      if (user?.profilePic) {
-        const filename = user?.profilePic?.split("/")?.pop()?.split(".")[0];
+    if (profileImg) {
+      if (user?.profileImg) {
+        const filename = user?.profileImg?.split("/")?.pop()?.split(".")[0];
         if (filename) {
           await cloudinary.uploader.destroy(filename);
         }
       }
 
-      const uploadedResponse = await cloudinary.uploader.upload(profilePic);
-      profilePic = uploadedResponse.secure_url;
+      const uploadedResponse = await cloudinary.uploader.upload(profileImg);
+      profileImg = uploadedResponse.secure_url;
     }
 
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
-    user.profilePic = profilePic || user.profilePic;
+    user.profileImg = profileImg || user.profileImg;
     user.bio = bio || user.bio;
 
     user = await user.save();
 
-    // Find all posts that this user replied and update username and userProfilePic fields
+    // Find all posts that this user replied and update username and userprofileImg fields
     await Post.updateMany(
       { "replies.userId": userId },
       {
         $set: {
           "replies.$[reply].username": user.username,
-          "replies.$[reply].userProfilePic": user.profilePic,
+          "replies.$[reply].userprofileImg": user.profileImg,
         },
       },
       { arrayFilters: [{ "reply.userId": userId }] }
@@ -260,7 +151,7 @@ const updateUser = async (req: CustomRequest, res: Response) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      profilePic: user.profilePic,
+      profileImg: user.profileImg,
       bio: user.bio,
     });
   } catch (err) {
@@ -310,26 +201,4 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
   }
 };
 
-const addDefaultFollowers = async (id: string) => {
-  const idsToFollow = [
-    `${process.env.RJ_USERID}`,
-    `${process.env.INSTAGRAM_USERID}`,
-    `${process.env.SNAPCHAT_USERID}`,
-    `${process.env.BOT_USERID}`,
-    `${process.env.CONNECT_HUB_USERID}`,
-  ];
-  for (const idToFollow of idsToFollow) {
-    await User.findByIdAndUpdate(idToFollow, { $push: { followers: id } });
-    await User.findByIdAndUpdate(id, { $push: { following: idToFollow } });
-  }
-};
-
-export {
-  signupUser,
-  loginUser,
-  logoutUser,
-  followUser,
-  updateUser,
-  getUserProfile,
-  getSuggestedUsers,
-};
+export { followUnfollowUser, updateUser, getUserProfile, getSuggestedUsers };
