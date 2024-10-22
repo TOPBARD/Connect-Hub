@@ -7,13 +7,13 @@ const generateTokenAndSetCookie = (
   res: Response
 ) => {
   const token = jwt.sign({ userId }, `${process.env.JWT_SECRET}`, {
-    expiresIn: "15d",
+    expiresIn: 3600,
   });
 
   res.cookie("jwtAuthToken", token, {
-    httpOnly: true, // more secure
-    maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
-    sameSite: "strict", // CSRF
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000,
+    sameSite: "strict",
   });
 
   return token;
