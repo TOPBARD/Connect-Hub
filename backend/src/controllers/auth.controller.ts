@@ -1,4 +1,4 @@
-import User from "../models/userModel";
+import User from "../models/user.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { LoginProps, SignupProps } from "../shared/interface/AuthProps";

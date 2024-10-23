@@ -1,5 +1,5 @@
-import Conversation from "../models/conversationModel";
-import Message from "../models/messageModel";
+import Conversation from "../models/conversation.model";
+import Message from "../models/message.model";
 import { Response } from "express";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { getRecipientSocketId } from "../socket/socket";

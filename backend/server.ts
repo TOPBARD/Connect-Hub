@@ -2,10 +2,11 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./src/db/connectDB";
 import cookieParser from "cookie-parser";
-import userRoutes from "./src/routes/userRoutes";
-import authRoutes from "./src/routes/authRoutes";
-import postRoutes from "./src/routes/postRoutes";
-import messageRoutes from "./src/routes/messageRoutes";
+import userRoutes from "./src/routes/user.route";
+import authRoutes from "./src/routes/auth.route";
+import postRoutes from "./src/routes/post.route";
+import notificationRoutes from "./src/routes/notification.route";
+import messageRoutes from "./src/routes/message.route";
 import { Response, Request } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./src/socket/socket";
@@ -30,6 +31,7 @@ app.use(cookieParser());
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/messages", messageRoutes);
 
 app.get("/", (req: Request, res: Response) => {

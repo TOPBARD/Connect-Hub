@@ -8,7 +8,7 @@ import {
   getLikedPosts,
   getFollowersPosts,
   getUserPosts
-} from "../controllers/postController";
+} from "../controllers/post.controller";
 import protectRoute from "../middlewares/protectRoute";
 
 const router = express.Router();

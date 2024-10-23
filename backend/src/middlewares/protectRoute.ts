@@ -1,6 +1,6 @@
 // Middleware for Authentication
 
-import User from "../models/userModel";
+import User from "../models/user.model";
 import jwt from "jsonwebtoken";
 import { Response, NextFunction } from "express";
 import { CustomRequest } from "../shared/interface/CustomRequest";

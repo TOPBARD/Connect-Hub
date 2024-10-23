@@ -1,12 +1,12 @@
-import User from "../models/userModel";
-import Post from "../models/postModel";
+import User from "../models/user.model";
+import Post from "../models/post.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import { UserResponse } from "../shared/interface/User";
-import Notification from "../models/notificationModel";
+import Notification from "../models/notification.model";
 import { NotificationAction } from "../shared/enum/notificationAction";
 
 /**

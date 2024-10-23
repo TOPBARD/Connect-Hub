@@ -1,9 +1,9 @@
-import Post from "../models/postModel";
-import User from "../models/userModel";
+import Post from "../models/post.model";
+import User from "../models/user.model";
 import { v2 as cloudinary } from "cloudinary";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { Request, Response } from "express";
-import Notification from "../models/notificationModel";
+import Notification from "../models/notification.model";
 import { NotificationAction } from "../shared/enum/notificationAction";
 
 /**
