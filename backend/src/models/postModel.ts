@@ -2,47 +2,38 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    postedBy: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     text: {
       type: String,
-      maxLength: 500,
     },
     img: {
       type: String,
     },
-    likes: {
-      // array of user ids
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "User",
-      default: [],
-    },
-    replies: [
+    likes: [
       {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    comments: [
+      {
         text: {
           type: String,
           required: true,
         },
-        userProfilePic: {
-          type: String,
-        },
-        username: {
-          type: String,
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
         },
       },
     ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Post = mongoose.model("Post", postSchema);

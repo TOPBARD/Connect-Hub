@@ -1,9 +1,9 @@
 import User from "../models/userModel";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
 import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
+import { CustomRequest } from "../shared/interface/CustomRequest";
 
 /**
  * Sign up a new user
@@ -141,14 +141,10 @@ const addDefaultFollowers = async (id: string) => {
  * @param res Response object
  */
 
-const getUserData = async (req: Request, res: Response) => {
+const getUserData = async (req: CustomRequest, res: Response) => {
   try {
-    const token: string = req?.cookies?.jwtAuthToken;
-    const decoded = jwt.verify(
-      token,
-      `${process.env.JWT_SECRET}`
-    ) as jwt.JwtPayload;
-    const user = await User.findById(decoded?.userId).select("-password");
+    const userId = req?.user?._id;
+    const user = await User.findById(userId).select("-password");
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });

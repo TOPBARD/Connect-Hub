@@ -3,6 +3,8 @@ import User from "../models/userModel";
 import { v2 as cloudinary } from "cloudinary";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { Request, Response } from "express";
+import Notification from "../models/notificationModel";
+import { NotificationAction } from "../shared/enum/notificationAction";
 
 /**
  * Create a new post
@@ -11,22 +13,16 @@ import { Request, Response } from "express";
  */
 const createPost = async (req: CustomRequest, res: Response) => {
   try {
-    const { postedBy, text }: { postedBy: string; text: string } = req?.body;
+    const { text }: { text: string } = req?.body;
     let { img }: { img: string } = req?.body;
 
-    if (!postedBy || !text) {
-      return res
-        .status(400)
-        .json({ error: "Postedby and text fields are required" });
+    if (!text) {
+      return res.status(400).json({ error: "Text fields is required" });
     }
-
-    const user = await User.findById(postedBy);
+    const userId = req?.user?._id.toString();
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
-    }
-
-    if (user?._id.toString() !== req?.user?._id.toString()) {
-      return res.status(401).json({ error: "Unauthorized to create post" });
     }
 
     // Limit max length of the post to 500
@@ -43,7 +39,7 @@ const createPost = async (req: CustomRequest, res: Response) => {
       img = uploadedResponse.secure_url;
     }
 
-    const newPost = new Post({ postedBy, text, img });
+    const newPost = new Post({ user: userId, text, img });
     await newPost.save();
 
     res.status(201).json(newPost);
@@ -83,7 +79,7 @@ const deletePost = async (req: CustomRequest, res: Response) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    if (post?.postedBy.toString() !== req?.user?._id.toString()) {
+    if (post?.user.toString() !== req?.user?._id.toString()) {
       return res.status(401).json({ error: "Unauthorized to delete post" });
     }
 
@@ -102,11 +98,11 @@ const deletePost = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Like/Unlike a post
+ * Like/Unlike a post by ID
  * @param req Request object containing the post ID
  * @param res Response object
  */
-const likePost = async (req: CustomRequest, res: Response) => {
+const likeUnlikePost = async (req: CustomRequest, res: Response) => {
   try {
     const { id: postId } = req?.params;
     const userId = req?.user?._id;
@@ -122,12 +118,24 @@ const likePost = async (req: CustomRequest, res: Response) => {
     if (userLikedPost) {
       // Unlike post
       await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
-      res.status(200).json({ message: "Post unliked successfully" });
+      await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
+      const updatedLikes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+      res.status(200).json(updatedLikes);
     } else {
       // Like post
       post.likes.push(userId);
+      await User.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
       await post.save();
-      res.status(200).json({ message: "Post liked successfully" });
+      const notification = new Notification({
+        from: userId,
+        to: post.user,
+        type: NotificationAction.LIKE,
+      });
+      await notification.save();
+      const updatedLikes = post.likes;
+      res.status(200).json(updatedLikes);
     }
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -135,17 +143,15 @@ const likePost = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Reply to a post
+ * Reply to a post by ID
  * @param req Request object containing the post ID and reply text
  * @param res Response object
  */
-const replyToPost = async (req: CustomRequest, res: Response) => {
+const commentOnPost = async (req: CustomRequest, res: Response) => {
   try {
     const { text }: { text: string } = req.body;
     const postId = req?.params?.id;
     const userId = req?.user?._id;
-    const userProfilePic = req?.user?.profilePic;
-    const username = req?.user?.username;
 
     if (!text) {
       return res.status(400).json({ error: "Text field is required" });
@@ -156,63 +162,131 @@ const replyToPost = async (req: CustomRequest, res: Response) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    const reply = { userId, text, userProfilePic, username };
+    const comment = { user: userId, text };
 
-    post.replies.push(reply);
+    post.comments.push(comment);
     await post.save();
 
-    res.status(200).json(reply);
+    res.status(200).json(post);
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
- * Get posts for the feed based on user's following
+ * Returns all Posts
  * @param req Request object
  * @param res Response object
  */
-const getFeedPosts = async (req: CustomRequest, res: Response) => {
+const getAllPosts = async (req: CustomRequest, res: Response) => {
   try {
-    const userId = req?.user?._id;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      })
+      .populate({
+        path: "comments.user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      });
+
+    if (posts.length === 0) {
+      return res.status(200).json([]);
     }
 
-    const following = user?.following;
-
-    const feedPosts = await Post.find({
-      postedBy: { $in: following },
-    })
-      .sort({
-        createdAt: -1,
-      })
-      .select("-updatedAt");
-
-    res.status(200).json(feedPosts);
+    res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
- * Get posts by a specific user
+ * Get all Posts liked by user
+ * @param req Request object
+ * @param res Response object
+ */
+const getLikedPosts = async (req: CustomRequest, res: Response) => {
+  const userId = req?.params?.id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
+      .populate({
+        path: "user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      })
+      .populate({
+        path: "comments.user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      });
+
+    res.status(200).json(likedPosts);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Get all Posts by followers
  * @param req Request object containing the username
  * @param res Response object
  */
-const getUserPosts = async (req: Request, res: Response) => {
-  const { username } = req?.params;
+const getFollowersPosts = async (req: CustomRequest, res: Response) => {
   try {
+    const userId = req?.user?._id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const following = user.following;
+
+    const feedPosts = await Post.find({ user: { $in: following } })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      })
+      .populate({
+        path: "comments.user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      });
+
+    res.status(200).json(feedPosts);
+  } catch (error) {
+    console.log("Error in getFollowingPosts controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Get user Posts
+ * @param req Request object containing the username
+ * @param res Response object
+ */
+const getUserPosts = async (req: CustomRequest, res: Response) => {
+  try {
+    const { username } = req.params;
+
     const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const posts = await Post.find({ postedBy: user?._id }).sort({
-      createdAt: -1,
-    });
-
+    if (!user) return res.status(404).json({ error: "User not found" });
+    const posts = await Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      })
+      .populate({
+        path: "comments.user",
+        select:
+          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+      });
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -223,8 +297,10 @@ export {
   createPost,
   getPost,
   deletePost,
-  likePost,
-  replyToPost,
-  getFeedPosts,
+  likeUnlikePost,
+  getAllPosts,
+  getLikedPosts,
+  commentOnPost,
+  getFollowersPosts,
   getUserPosts,
 };

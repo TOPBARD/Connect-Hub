@@ -5,7 +5,9 @@ export interface UserResponse {
   name: string;
   username: string;
   email: string;
-  profilePic?: string;
+  profileImg: string;
+  coverImg: string;
+  link: string;
   followers?: mongoose.Types.ObjectId[];
   following?: mongoose.Types.ObjectId[];
   bio?: string;

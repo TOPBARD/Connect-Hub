@@ -2,22 +2,24 @@ import express from "express";
 import {
   createPost,
   deletePost,
-  getPost,
-  likePost,
-  replyToPost,
-  getFeedPosts,
-  getUserPosts,
+  likeUnlikePost,
+  commentOnPost,
+  getAllPosts,
+  getLikedPosts,
+  getFollowersPosts,
+  getUserPosts
 } from "../controllers/postController";
 import protectRoute from "../middlewares/protectRoute";
 
 const router = express.Router();
 
-router.get("/feed", protectRoute, getFeedPosts);
-router.get("/:id", getPost);
+router.get("/all", protectRoute, getAllPosts);
+router.get("/liked/:id", protectRoute, getLikedPosts);
+router.get("/followers", protectRoute, getFollowersPosts);
 router.get("/user/:username", getUserPosts);
 router.post("/create", protectRoute, createPost);
+router.post("/like/:id", protectRoute, likeUnlikePost);
+router.post("/comment/:id", protectRoute, commentOnPost);
 router.delete("/:id", protectRoute, deletePost);
-router.put("/like/:id", protectRoute, likePost);
-router.put("/reply/:id", protectRoute, replyToPost);
 
 export default router;
