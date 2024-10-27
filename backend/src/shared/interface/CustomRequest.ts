@@ -1,6 +1,6 @@
 import { Request } from "express";
-import { UserResponse } from "./User";
+import { Users } from "./User";
 
 export interface CustomRequest extends Request {
-  user?: UserResponse;
+  user?: Users;
 }

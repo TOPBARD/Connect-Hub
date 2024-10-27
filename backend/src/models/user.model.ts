@@ -52,10 +52,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    isFrozen: {
-      type: Boolean,
-      default: false,
-    },
     likedPosts: [
       {
         type: mongoose.Schema.Types.ObjectId,

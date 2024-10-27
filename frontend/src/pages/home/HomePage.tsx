@@ -1,43 +1,48 @@
 import { useState } from "react";
 
-import Posts from "../../components/posts/all-posts/Posts";
+import AllPosts from "../../components/posts/all-posts/Posts";
 import CreatePost from "../../components/posts/create-post/CreatePost";
+import { FEEDTYPE } from "../../shared/enums/Feed";
 
 const HomePage = () => {
-  const [feedType, setFeedType] = useState("forYou");
+  // Manage feed type state: "all" or "following"
+  const [feedType, setFeedType] = useState<FEEDTYPE>(FEEDTYPE.ALL);
 
   return (
     <>
+      {/* Main container */}
       <div className="flex-[4_4_0] mr-auto border-r border-gray-700 min-h-screen">
-        {/* Header */}
+        {/* Header with feed selection */}
         <div className="flex w-full border-b border-gray-700">
           <div
             className={
               "flex justify-center flex-1 p-3 hover:bg-secondary transition duration-300 cursor-pointer relative"
             }
-            onClick={() => setFeedType("forYou")}
+            onClick={() => setFeedType(FEEDTYPE.ALL)}
           >
-            For you
-            {feedType === "forYou" && (
+            All
+            {/* Active indicator for "All" */}
+            {feedType === FEEDTYPE.ALL && (
               <div className="absolute bottom-0 w-10  h-1 rounded-full bg-primary"></div>
             )}
           </div>
           <div
             className="flex justify-center flex-1 p-3 hover:bg-secondary transition duration-300 cursor-pointer relative"
-            onClick={() => setFeedType("following")}
+            onClick={() => setFeedType(FEEDTYPE.FOLLOWING)}
           >
             Following
-            {feedType === "following" && (
+            {/* Active indicator for "Following" */}
+            {feedType === FEEDTYPE.FOLLOWING && (
               <div className="absolute bottom-0 w-10  h-1 rounded-full bg-primary"></div>
             )}
           </div>
         </div>
 
-        {/*  CREATE POST INPUT */}
+        {/* Create Post Input Section */}
         <CreatePost />
 
-        {/* POSTS */}
-        <Posts />
+        {/* Posts display based on selected feed type */}
+        <AllPosts feedType={feedType} />
       </div>
     </>
   );

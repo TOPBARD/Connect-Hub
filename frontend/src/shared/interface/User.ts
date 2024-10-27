@@ -3,9 +3,13 @@ export interface User {
   name: string;
   username: string;
   email: string;
-  profilePic?: string;
+  profileImg: string;
+  coverImg: string;
   followers?: string[];
   following?: string[];
   bio?: string;
-  isFrozen?: boolean;
+  link?: string;
+  likedPost?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

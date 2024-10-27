@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
+import { User } from "../../shared/interface/User";
 
-const EditProfileModal = () => {
+const EditProfileModal = ({ authUser }: { authUser: User }) => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     username: "",
     email: "",
     bio: "",
@@ -11,12 +13,32 @@ const EditProfileModal = () => {
     currentPassword: "",
   });
 
-  const handleInputChange = (e: any) => {
+  const { updateProfile, isUpdatingProfile } = useUpdateUserProfile();
+
+  const handleInputChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  useEffect(() => {
+    if (authUser) {
+      setFormData({
+        name: authUser.name,
+        username: authUser.username,
+        email: authUser.email,
+        bio: authUser.bio as string,
+        link: authUser.link as string,
+        newPassword: "",
+        currentPassword: "",
+      });
+    }
+  }, [authUser]);
   return (
     <>
+      {/* Button to open the edit profile modal */}
       <button
         className="btn btn-outline rounded-full btn-sm"
         onClick={() => {
@@ -28,6 +50,8 @@ const EditProfileModal = () => {
       >
         Edit profile
       </button>
+
+      {/* Modal for editing profile */}
       <dialog id="edit_profile_modal" className="modal">
         <div className="modal-box border rounded-md border-gray-700 shadow-md">
           <h3 className="font-bold text-lg my-3">Update Profile</h3>
@@ -35,15 +59,16 @@ const EditProfileModal = () => {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Profile updated successfully");
+              updateProfile(formData);
             }}
           >
+            {/* Full Name and Username Input Fields */}
             <div className="flex flex-wrap gap-2">
               <input
                 type="text"
                 placeholder="Full Name"
                 className="flex-1 input border border-gray-700 rounded p-2 input-md"
-                value={formData.fullName}
+                value={formData.name}
                 name="fullName"
                 onChange={handleInputChange}
               />
@@ -56,6 +81,8 @@ const EditProfileModal = () => {
                 onChange={handleInputChange}
               />
             </div>
+
+            {/* Email and Bio Input Fields */}
             <div className="flex flex-wrap gap-2">
               <input
                 type="email"
@@ -73,6 +100,8 @@ const EditProfileModal = () => {
                 onChange={handleInputChange}
               />
             </div>
+
+            {/* Current Password and New Password Input Fields */}
             <div className="flex flex-wrap gap-2">
               <input
                 type="password"
@@ -91,6 +120,8 @@ const EditProfileModal = () => {
                 onChange={handleInputChange}
               />
             </div>
+
+            {/* Link Input Field */}
             <input
               type="text"
               placeholder="Link"
@@ -99,11 +130,15 @@ const EditProfileModal = () => {
               name="link"
               onChange={handleInputChange}
             />
+
+            {/* Submit Button */}
             <button className="btn btn-primary rounded-full btn-sm text-white">
-              Update
+              {isUpdatingProfile ? "Updating..." : "Update"}
             </button>
           </form>
         </div>
+
+        {/* Backdrop for closing the modal */}
         <form method="dialog" className="modal-backdrop">
           <button className="outline-none">close</button>
         </form>

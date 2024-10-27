@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
-export interface Post {
+export interface Posts {
   _id: mongoose.Types.ObjectId;
-  postedBy: mongoose.Types.ObjectId;
-  text?: string;
+  user: mongoose.Types.ObjectId;
+  text: string;
   img?: string;
   likes?: mongoose.Types.ObjectId[];
-  replies?: PostReply[];
+  comments?: PostReply[];
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface PostReply {
+  _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   text: string;
-  userProfilePic?: string;
-  username?: string;
 }

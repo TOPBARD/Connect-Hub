@@ -5,13 +5,13 @@ import bcrypt from "bcryptjs";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
-import { UserResponse } from "../shared/interface/User";
+import { UpdateUserProps, Users } from "../shared/interface/User";
 import Notification from "../models/notification.model";
-import { NotificationAction } from "../shared/enum/notificationAction";
+import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 
 /**
  * Get user profile by username
- * @param req Request object containing the username
+ * @param req Request object with username
  * @param res Response object with user data
  */
 const getUserProfile = async (req: Request, res: Response) => {
@@ -19,11 +19,12 @@ const getUserProfile = async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ username })
       .select("-password")
+      .select("-email")
       .select("-updatedAt");
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.status(200).json(user);
+    return res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -34,10 +35,12 @@ const getUserProfile = async (req: Request, res: Response) => {
  */
 const followUnfollowUser = async (req: CustomRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req?.params;
     const currentUserId = req?.user?._id;
-    const userToModify = await User.findById(id);
-    const currentUser = await User.findById(currentUserId);
+    const [userToModify, currentUser] = await Promise.all([
+      User.findById(id),
+      User.findById(currentUserId),
+    ]);
 
     if (id === currentUserId?.toString()) {
       return res
@@ -53,29 +56,43 @@ const followUnfollowUser = async (req: CustomRequest, res: Response) => {
 
     if (isFollowing) {
       // Unfollow user
-      await User.findByIdAndUpdate(id, { $pull: { followers: currentUserId } });
-      await User.findByIdAndUpdate(currentUserId, { $pull: { following: id } });
-      res.status(200).json({ message: "User Unfollowed Successfully" });
+      try {
+        await Promise.all([
+          User.findByIdAndUpdate(id, { $pull: { followers: currentUserId } }),
+          User.findByIdAndUpdate(currentUserId, { $pull: { following: id } }),
+        ]);
+        return res
+          .status(200)
+          .json({ message: "User Unfollowed Successfully" });
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to unfollow user" });
+      }
     } else {
       // Follow user
-      await User.findByIdAndUpdate(id, { $push: { followers: currentUserId } });
-      await User.findByIdAndUpdate(currentUserId, { $push: { following: id } });
-      const newNotification = new Notification({
-        type: NotificationAction.FOLLOW,
-        from: currentUserId,
-        to: userToModify?._id,
-      });
-      await newNotification.save();
-      res.status(200).json({ message: "User Followed Successfully" });
+      try {
+        await Promise.all([
+          User.findByIdAndUpdate(id, { $push: { followers: currentUserId } }),
+          User.findByIdAndUpdate(currentUserId, { $push: { following: id } }),
+          new Notification({
+            type: NOTIFICATIONACTION.FOLLOW,
+            from: currentUserId,
+            to: id,
+          }).save(),
+        ]);
+        return res.status(200).json({ message: "User Followed Successfully" });
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to follow user" });
+      }
     }
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
  * Update user profile
- * @param req Request object containing updated user details
+ * @body User update details
+ * @param req Request object containing updated user data
  * @param res Response object
  */
 const updateUser = async (req: CustomRequest, res: Response) => {
@@ -87,18 +104,9 @@ const updateUser = async (req: CustomRequest, res: Response) => {
     newPassword,
     bio,
     link,
-  }: {
-    name: string;
-    email: string;
-    username: string;
-    currentPassword: string;
-    newPassword: string;
-    bio: string;
-    link: string;
-  } = req.body;
+  }: UpdateUserProps = req?.body;
   let { profileImg, coverImg }: { profileImg: string; coverImg: string } =
     req?.body;
-
   const userId = req?.user?._id;
   try {
     let user = await User.findById(userId);
@@ -132,6 +140,8 @@ const updateUser = async (req: CustomRequest, res: Response) => {
           await cloudinary.uploader.destroy(filename);
         }
       }
+      const uploadedResponse = await cloudinary.uploader.upload(profileImg);
+      profileImg = uploadedResponse?.secure_url;
     }
     if (coverImg) {
       if (user?.coverImg) {
@@ -140,45 +150,44 @@ const updateUser = async (req: CustomRequest, res: Response) => {
           await cloudinary.uploader.destroy(filename);
         }
       }
-
       const uploadedResponse = await cloudinary.uploader.upload(coverImg);
-      coverImg = uploadedResponse.secure_url;
+      coverImg = uploadedResponse?.secure_url;
     }
 
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.username = username || user.username;
-    user.bio = bio || user.bio;
-    user.link = link || user.link;
-    user.profileImg = profileImg || user.profileImg;
-    user.coverImg = coverImg || user.coverImg;
+    user.name = name || user?.name;
+    user.email = email || user?.email;
+    user.username = username || user?.username;
+    user.bio = bio || user?.bio;
+    user.link = link || user?.link;
+    user.profileImg = profileImg || user?.profileImg;
+    user.coverImg = coverImg || user?.coverImg;
 
     user = await user.save();
 
     // Find all posts that this user replied and update username and userprofileImg fields
     await Post.updateMany(
-      { "replies.userId": userId },
+      { "comments.user": userId },
       {
         $set: {
-          "replies.$[reply].username": user.username,
-          "replies.$[reply].userprofileImg": user.profileImg,
+          "comments.$[comment].username": user.username,
+          "comments.$[comment].userprofileImg": user.profileImg,
         },
       },
-      { arrayFilters: [{ "reply.userId": userId }] }
+      { arrayFilters: [{ "comment.user": userId }] }
     );
 
-    res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      profileImg: user.profileImg,
-      coverImg: user.coverImg,
-      bio: user.bio,
-      link: user.link,
+    return res.status(200).json({
+      _id: user?._id,
+      name: user?.name,
+      email: user?.email,
+      username: user?.username,
+      profileImg: user?.profileImg,
+      coverImg: user?.coverImg,
+      bio: user?.bio,
+      link: user?.link,
     });
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -192,7 +201,7 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
     const userId = req?.user?._id;
     const usersFollowedByYou = await User.findById(userId).select("following");
 
-    const users: UserResponse[] = await User.aggregate([
+    const users: Users[] = await User.aggregate([
       {
         $match: {
           _id: { $ne: userId },
@@ -206,6 +215,9 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
           password: 0,
           email: 0,
           followers: 0,
+          following: 0,
+          link: 0,
+          likedPost: 0,
           bio: 0,
           isFrozen: 0,
           createdAt: 0,
@@ -216,11 +228,11 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
     const filteredUsers = users.filter(
       (user) => !usersFollowedByYou?.following.includes(user._id)
     );
-    const suggestedUsers: UserResponse[] = filteredUsers.slice(0, 4);
+    const suggestedUsers: Users[] = filteredUsers.slice(0, 4);
 
-    res.status(200).json(suggestedUsers);
+    return res.status(200).json(suggestedUsers);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

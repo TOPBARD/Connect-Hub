@@ -1,10 +1,10 @@
 import Post from "../models/post.model";
 import User from "../models/user.model";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "../cloudinary/CloudinaryConfig";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { Request, Response } from "express";
 import Notification from "../models/notification.model";
-import { NotificationAction } from "../shared/enum/notificationAction";
+import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 
 /**
  * Create a new post
@@ -14,8 +14,7 @@ import { NotificationAction } from "../shared/enum/notificationAction";
 const createPost = async (req: CustomRequest, res: Response) => {
   try {
     const { text }: { text: string } = req?.body;
-    let { img }: { img: string } = req?.body;
-
+    let { img } = req?.body;
     if (!text) {
       return res.status(400).json({ error: "Text fields is required" });
     }
@@ -33,18 +32,27 @@ const createPost = async (req: CustomRequest, res: Response) => {
         .json({ error: `Text must be less than ${maxLength} characters` });
     }
 
+    /*
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.fron(bytes);
+    const uploadStream = await cloudinary.uploader.upload_stream({
+    folder : "Connect- Hub"});
+    uploadStream.end(buffer);
+    */
+
     // Upload image to cloudinary if provided
     if (img) {
-      const uploadedResponse = await cloudinary.uploader.upload(img);
+      const uploadedResponse = await cloudinary.uploader.upload(img, {
+        folder: "Connect-Hub",
+      });
       img = uploadedResponse.secure_url;
     }
 
     const newPost = new Post({ user: userId, text, img });
     await newPost.save();
-
-    res.status(201).json(newPost);
+    return res.status(201).json(newPost);
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -61,9 +69,9 @@ const getPost = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    res.status(200).json(post);
+    return res.status(200).json(post);
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -91,9 +99,9 @@ const deletePost = async (req: CustomRequest, res: Response) => {
 
     await Post.findByIdAndDelete(req?.params?.id);
 
-    res.status(200).json({ message: "Post deleted successfully" });
+    return res.status(200).json({ message: "Post deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -117,28 +125,41 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
 
     if (userLikedPost) {
       // Unlike post
-      await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
-      await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
-      const updatedLikes = post.likes.filter(
-        (id) => id.toString() !== userId.toString()
-      );
-      res.status(200).json(updatedLikes);
+      try {
+        await Promise.all([
+          Post.updateOne({ _id: postId }, { $pull: { likes: userId } }),
+          User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } }),
+        ]);
+
+        const updatedLikes = post.likes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+        return res.status(200).json(updatedLikes);
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to unlike post" });
+      }
     } else {
       // Like post
-      post.likes.push(userId);
-      await User.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
-      await post.save();
-      const notification = new Notification({
-        from: userId,
-        to: post.user,
-        type: NotificationAction.LIKE,
-      });
-      await notification.save();
-      const updatedLikes = post.likes;
-      res.status(200).json(updatedLikes);
+      try {
+        post.likes.push(userId);
+        await Promise.all([
+          User.updateOne({ _id: userId }, { $push: { likedPosts: postId } }),
+          post.save(),
+          new Notification({
+            from: userId,
+            to: post.user,
+            type: NOTIFICATIONACTION.LIKE,
+          }).save(),
+        ]);
+
+        const updatedLikes = post.likes;
+        return res.status(200).json(updatedLikes);
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to like post" });
+      }
     }
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -149,7 +170,7 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
  */
 const commentOnPost = async (req: CustomRequest, res: Response) => {
   try {
-    const { text }: { text: string } = req.body;
+    const { text }: { text: string } = req?.body;
     const postId = req?.params?.id;
     const userId = req?.user?._id;
 
@@ -169,7 +190,7 @@ const commentOnPost = async (req: CustomRequest, res: Response) => {
 
     res.status(200).json(post);
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -197,9 +218,9 @@ const getAllPosts = async (req: CustomRequest, res: Response) => {
       return res.status(200).json([]);
     }
 
-    res.status(200).json(posts);
+    return res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -225,9 +246,9 @@ const getLikedPosts = async (req: CustomRequest, res: Response) => {
           "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
       });
 
-    res.status(200).json(likedPosts);
+    return res.status(200).json(likedPosts);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -257,10 +278,9 @@ const getFollowersPosts = async (req: CustomRequest, res: Response) => {
           "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
       });
 
-    res.status(200).json(feedPosts);
+    return res.status(200).json(feedPosts);
   } catch (error) {
-    console.log("Error in getFollowingPosts controller: ", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -271,7 +291,7 @@ const getFollowersPosts = async (req: CustomRequest, res: Response) => {
  */
 const getUserPosts = async (req: CustomRequest, res: Response) => {
   try {
-    const { username } = req.params;
+    const { username } = req?.params;
 
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -287,9 +307,9 @@ const getUserPosts = async (req: CustomRequest, res: Response) => {
         select:
           "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
       });
-    res.status(200).json(posts);
+    return res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

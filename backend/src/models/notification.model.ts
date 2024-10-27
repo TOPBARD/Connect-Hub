@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { NotificationAction } from "../shared/enum/notificationAction";
+import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: NotificationAction,
+      enum: NOTIFICATIONACTION,
     },
     read: {
       type: Boolean,

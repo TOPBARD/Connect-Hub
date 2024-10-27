@@ -1,16 +1,18 @@
-export interface Post {
+import { User } from "./User";
+
+export interface Posts {
   _id: string;
-  postedBy: string;
-  text?: string;
+  user: User;
+  text: string;
   img?: string;
   likes?: string[];
-  replies?: PostReply[];
+  comments?: PostComment[];
   createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface PostReply {
-  userId: string;
+export interface PostComment {
+  _id: string;
+  user: User;
   text: string;
-  userProfilePic?: string;
-  username?: string;
 }

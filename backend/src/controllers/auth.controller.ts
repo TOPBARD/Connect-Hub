@@ -4,17 +4,19 @@ import bcrypt from "bcryptjs";
 import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
 import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
 import { CustomRequest } from "../shared/interface/CustomRequest";
+import { addDefaultFollowers } from "../shared/helper/addDefaultFollowers";
 
 /**
  * Sign up a new user
- * @param req Request object containing user details (name, email, username, password)
- * @param res Response object
+ * @body user details (name, email, username, password)
+ * @param req Request object
+ * @param res Response object with user data
  */
 const signupUser = async (req: Request, res: Response) => {
   try {
     const { name, email, username, password }: SignupProps = req?.body;
     if (!name || !email || !username || !password) {
-      res.status(400).json({ error: "Please fill the required fields" });
+      return res.status(400).json({ error: "Please fill the required fields" });
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -47,35 +49,35 @@ const signupUser = async (req: Request, res: Response) => {
     if (newUser) {
       addDefaultFollowers(newUser._id.toString());
       await newUser.save();
-      res.status(201).json({
+      return res.status(201).json({
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
-        followers: newUser.followers,
-        following: newUser.following,
-        bio: newUser.bio,
         profileImg: newUser.profileImg,
         coverImg: newUser.coverImg,
+        link: newUser.link,
+        bio: newUser.bio,
       });
     } else {
-      res.status(400).json({ error: "Invalid user data" });
+      return res.status(400).json({ error: "Invalid user data" });
     }
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
  * Log in a user
- * @param req Request object containing user credentials (username, password)
+ * @body object containing user credentials (username, password)
+ * @param req Request object
  * @param res Response object with user data and token
  */
 const loginUser = async (req: Request, res: Response) => {
   try {
     const { username, password }: LoginProps = req?.body;
     if (!username || !password) {
-      res.status(400).json({ error: "Please fill the required fields" });
+      return res.status(400).json({ error: "Please fill the required fields" });
     }
 
     const user = await User.findOne({ username });
@@ -87,24 +89,22 @@ const loginUser = async (req: Request, res: Response) => {
     if (!isPasswordCorrect)
       return res.status(400).json({ error: "Invalid username or password" });
 
-    if (user.isFrozen) {
-      user.isFrozen = false;
-      await user.save();
-    }
     generateTokenAndSetCookie(user.id, res);
-    res.status(200).json({
+    return res.status(200).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       username: user.username,
+      link: user.link,
       followers: user.followers,
       following: user.following,
+      likedPosts : user.likedPosts,
       bio: user.bio,
       profileImg: user.profileImg,
       coverImg: user.coverImg,
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -116,38 +116,25 @@ const loginUser = async (req: Request, res: Response) => {
 const logoutUser = (req: Request, res: Response) => {
   try {
     res.cookie("jwtAuthToken", "", { maxAge: 0 });
-    res.status(200).json({ message: "User logged out successfully" });
+    return res.status(200).json({ message: "User logged out successfully" });
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-const addDefaultFollowers = async (id: string) => {
-  const idsToFollow = [
-    `${process.env.RJ_USERID}`,
-    `${process.env.INSTAGRAM_USERID}`,
-    `${process.env.SNAPCHAT_USERID}`,
-    `${process.env.BOT_USERID}`,
-    `${process.env.CONNECT_HUB_USERID}`,
-  ];
-  for (const idToFollow of idsToFollow) {
-    await User.findByIdAndUpdate(idToFollow, { $push: { followers: id } });
-    await User.findByIdAndUpdate(id, { $push: { following: idToFollow } });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
  * Get user data for authenticated user
- * @param req Request object
- * @param res Response object
+ * @param req Request object with user id
+ * @param res Response object with user data
  */
 
 const getUserData = async (req: CustomRequest, res: Response) => {
   try {
     const userId = req?.user?._id;
     const user = await User.findById(userId).select("-password");
-    res.status(200).json(user);
+    return res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 export { signupUser, loginUser, logoutUser, getUserData };

@@ -2,48 +2,84 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import XSvg from "../../../components/svgs/svg";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { User } from "../../../shared/interface/User";
 
 import { MdOutlineMail } from "react-icons/md";
 import { MdPassword } from "react-icons/md";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LoginDataProps } from "../../../shared/interface/AuthData";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
+  // Initialize form data state
+  const [formData, setFormData] = useState<LoginDataProps>({
     username: "",
     password: "",
   });
 
+  const queryClient = useQueryClient();
+  // Login mutation with success and error handling
+  const {
+    mutate: loginMutation,
+    isPending,
+    isError,
+  } = useMutation({
+    mutationFn: async () => {
+      try {
+        const { username, password } = formData;
+        await axios.post<User>("/api/auth/login", {
+          username,
+          password,
+        });
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+          throw toast.error(`${error.response.data.error}`);
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.success("Login Successful");
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
+  });
+
+  // Form submit handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    loginMutation();
   };
 
+  // Update form data on input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isError = false;
-
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen">
+      {/* Display SVG on large screens */}
       <div className="flex-1 hidden lg:flex items-center  justify-center">
-        <XSvg className="lg:w-2/3 fill-white" />
+        <XSvg className="lg:w-2/3" />
       </div>
       <div className="flex-1 flex flex-col justify-center items-center">
         <form className="flex gap-4 flex-col" onSubmit={handleSubmit}>
-          <XSvg className="w-24 lg:hidden fill-white" />
+          <XSvg className="w-24 lg:hidden" />
           <h1 className="text-4xl font-extrabold text-white">{"Let's"} go.</h1>
+
+          {/* Username input */}
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdOutlineMail />
             <input
               type="text"
               className="grow"
-              placeholder="username"
+              placeholder="Username"
               name="username"
               onChange={handleInputChange}
               value={formData.username}
             />
           </label>
 
+          {/* Password input */}
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdPassword />
             <input
@@ -55,11 +91,19 @@ const LoginPage = () => {
               value={formData.password}
             />
           </label>
+
+          {/* Login button with loading state */}
           <button className="btn rounded-full btn-primary text-white">
-            Login
+            {isPending ? "Loading..." : "Login"}
           </button>
-          {isError && <p className="text-red-500">Something went wrong</p>}
+
+          {/* Error message */}
+          {isError && (
+            <p className="text-red-500">Please Fill Correct Information</p>
+          )}
         </form>
+
+        {/* Sign up link */}
         <div className="flex flex-col gap-2 mt-4">
           <p className="text-white text-lg">{"Don't"} have an account?</p>
           <Link to="/signup">

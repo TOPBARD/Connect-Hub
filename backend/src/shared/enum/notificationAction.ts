@@ -1,4 +1,4 @@
-export enum NotificationAction {
+export enum NOTIFICATIONACTION {
   LIKE = "like",
   FOLLOW = "follow",
   COMMENT = "comment",
