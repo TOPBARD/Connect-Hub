@@ -28,7 +28,7 @@ const profileApi = (username?: string) => {
     refetch,
     isRefetching,
   } = useQuery<User>({
-    queryKey: ["userProfile"],
+    queryKey: ["userProfile" , username],
     queryFn: async () => {
       try {
         const userData = await axios.get(`/api/users/profile/${username}`);
@@ -37,6 +37,7 @@ const profileApi = (username?: string) => {
         throw new Error();
       }
     },
+    enabled: !!username,
   });
 
   const { mutateAsync: updateProfileImage, isPending: isUpdatingProfileImage } =

@@ -68,11 +68,11 @@ const ProfilePage = () => {
   // Refetch user data whenever the username changes
   useEffect(() => {
     refetch();
-  }, [username, refetch]);
+  }, [username , refetch]);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async(e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileImage({ profileImg, coverImg });
+    await updateProfileImage({ profileImg, coverImg });
     setCoverImg(null);
     setProfileImg(null);
   };

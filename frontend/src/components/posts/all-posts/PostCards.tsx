@@ -4,104 +4,48 @@ import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import toast from "react-hot-toast";
 import { User } from "../../../shared/interface/User";
 import { formatPostDate } from "../../../shared/functions/DataFormatter";
 import LoadingSpinner from "../../../shared/loading-spinner/LoadingSpinner";
 import { PostComment, Posts } from "../../../shared/interface/Post";
+import singlePostApi from "../../../api/posts/SinglePost";
 
 const Post = ({ post }: { post: Posts }) => {
-  const queryClient = useQueryClient();
   const { data: authUser } = useQuery<User>({
     queryKey: ["authUser"],
   });
   const [comment, setComment] = useState("");
   const postOwner = post.user;
+  const postId = post._id;
   const isLiked = post?.likes?.includes(authUser?._id as string);
   const isMyPost = authUser?._id === post?.user?._id;
   const formattedDate = formatPostDate(post.createdAt);
 
-  // Mutation to delete a post
-  const { mutate: deletePost, isPending: isDeleting } = useMutation({
-    mutationFn: async () => {
-      try {
-        const deletePostData = await axios.delete(`/api/posts/${post._id}`);
-        return deletePostData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-    onSuccess: () => {
-      toast.success("Post deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
-
-  // Mutation to like a post
-  const { mutate: likePost, isPending: isLiking } = useMutation({
-    mutationFn: async () => {
-      try {
-        const likePostData = await axios.post(`/api/posts/like/${post._id}`);
-        return likePostData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-    onSuccess: (updatedLikes) => {
-      toast.success("Post liked successfully!!");
-      queryClient.setQueryData(["posts"], (oldData: Posts[]) => {
-        return oldData.map((p) => {
-          if (p._id === post._id) {
-            return { ...p, likes: updatedLikes };
-          }
-          return p;
-        });
-      });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  // Mutation to comment on a post
-  const { mutate: commentPost, isPending: isCommenting } = useMutation({
-    mutationFn: async () => {
-      try {
-        const commentPostData = await axios.post(
-          `/api/posts/comment/${post._id}`,
-          { text: comment }
-        );
-        return commentPostData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-    onSuccess: () => {
-      toast.success("Comment posted successfully");
-      setComment("");
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  const {
+    deletePost,
+    commentPost,
+    likePost,
+    isLiking,
+    isCommenting,
+    isDeleting,
+  } = singlePostApi(post);
 
   const handleDeletePost = () => {
-    deletePost();
+    deletePost(post._id);
   };
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (isCommenting) return;
-    commentPost();
+    commentPost({ postId, comment });
+    setComment("");
   };
 
   const handleLikePost = () => {
     if (isLiking) return;
-    likePost();
+    likePost(post._id);
   };
 
   return (

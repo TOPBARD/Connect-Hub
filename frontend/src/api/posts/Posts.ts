@@ -43,6 +43,7 @@ const postApi = (POST_ENDPOINT?: string) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
+
   return {
     posts,
     createPost,
