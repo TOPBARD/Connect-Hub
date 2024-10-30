@@ -16,3 +16,8 @@ export interface PostComment {
   user: User;
   text: string;
 }
+
+export interface CreatePost {
+  text: string;
+  img: string | null;
+}

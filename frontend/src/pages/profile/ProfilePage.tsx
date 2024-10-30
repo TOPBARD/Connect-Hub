@@ -11,13 +11,13 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../shared/functions/DataFormatter";
 import { User } from "../../shared/interface/User";
 import useFollow from "../../hooks/useFollow";
-import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
 import { FEEDTYPE } from "../../shared/enums/Feed";
+import profileApi from "../../api/profile/Profile";
+import { USERIMAGETYPE } from "../../shared/enums/UserImage";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState<string | null>(null);
@@ -28,27 +28,18 @@ const ProfilePage = () => {
   const coverImgRef = useRef<HTMLInputElement | null>(null);
   const profileImgRef = useRef<HTMLInputElement | null>(null);
 
-  const { isUpdatingProfile, updateProfile } = useUpdateUserProfile();
   const { follow, isPending } = useFollow();
 
-  const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
-  // Fetch user profile data using React Query
   const {
-    data: user,
+    updateProfileImage,
+    user,
     isLoading,
     refetch,
     isRefetching,
-  } = useQuery<User>({
-    queryKey: ["userProfile"],
-    queryFn: async () => {
-      try {
-        const userData = await axios.get(`/api/users/profile/${username}`);
-        return userData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-  });
+    isUpdatingProfileImage,
+  } = profileApi(username as string);
+
+  const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
   const isMyProfile = authUser?._id === user?._id;
   const memberSinceDate = formatMemberSinceDate(user?.createdAt as Date);
@@ -57,7 +48,7 @@ const ProfilePage = () => {
   // Handle image upload change for cover and profile images.
   const handleImgChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    state: "coverImg" | "profileImg"
+    state: USERIMAGETYPE
   ) => {
     e.preventDefault();
     const file = e?.target?.files?.[0];
@@ -65,7 +56,7 @@ const ProfilePage = () => {
       const reader = new FileReader();
       reader.onload = () => {
         if (reader.result) {
-          state === "coverImg"
+          state === USERIMAGETYPE.COVER_IMAGE
             ? setCoverImg(reader.result as string)
             : setProfileImg(reader.result as string);
         }
@@ -78,6 +69,13 @@ const ProfilePage = () => {
   useEffect(() => {
     refetch();
   }, [username, refetch]);
+
+  const handleUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileImage({ profileImg, coverImg });
+    setCoverImg(null);
+    setProfileImg(null);
+  };
 
   return (
     <>
@@ -124,7 +122,9 @@ const ProfilePage = () => {
                   hidden
                   accept="image/*"
                   ref={coverImgRef}
-                  onChange={(e) => handleImgChange(e, "coverImg")}
+                  onChange={(e) =>
+                    handleImgChange(e, USERIMAGETYPE.COVER_IMAGE)
+                  }
                 />
 
                 {/* Profile Image Input*/}
@@ -133,7 +133,9 @@ const ProfilePage = () => {
                   hidden
                   accept="image/*"
                   ref={profileImgRef}
-                  onChange={(e) => handleImgChange(e, "profileImg")}
+                  onChange={(e) =>
+                    handleImgChange(e, USERIMAGETYPE.PROFILE_IMAGE)
+                  }
                 />
                 {/* USER AVATAR */}
                 <div className="avatar absolute -bottom-16 left-4">
@@ -158,7 +160,9 @@ const ProfilePage = () => {
               </div>
               {/* Follow/Unfollow Button and Profile Update Button */}
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal authUser={authUser as User} />}
+                {isMyProfile && (
+                  <EditProfileModal authUser={authUser as User} />
+                )}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
@@ -172,18 +176,9 @@ const ProfilePage = () => {
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={async () => {
-                      try {
-                        await updateProfile({ coverImg, profileImg });
-                        setProfileImg(null);
-                        setCoverImg(null);
-                      } catch (error) {
-                        // Log the error or handle it as needed
-                        console.error("Error updating profile:", error);
-                      }
-                    }}
+                    onClick={handleUpdate}
                   >
-                    {isUpdatingProfile ? "Updating..." : "Update"}
+                    {isUpdatingProfileImage ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>
@@ -262,7 +257,11 @@ const ProfilePage = () => {
           )}
 
           {/* Posts Section */}
-          <AllPosts feedType={feedType} username={username} userId={user?._id} />
+          <AllPosts
+            feedType={feedType}
+            username={username}
+            userId={user?._id}
+          />
         </div>
       </div>
     </>

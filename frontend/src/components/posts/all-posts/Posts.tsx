@@ -1,11 +1,10 @@
 import Post from "./PostCards";
 import PostSkeleton from "../PostSkeleton";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import axios from "axios";
 import { FEEDTYPE } from "../../../shared/enums/Feed";
 import { getPostEndpoint } from "../../../shared/functions/PostEndpoints";
 import { Posts } from "../../../shared/interface/Post";
+import postApi from "../../../api/posts/Posts";
 
 const AllPosts = ({
   feedType,
@@ -18,23 +17,7 @@ const AllPosts = ({
 }) => {
   const POST_ENDPOINT = getPostEndpoint(feedType, username, userId);
 
-  // Fetch posts using React Query
-  const {
-    data: posts,
-    isLoading,
-    refetch,
-    isRefetching,
-  } = useQuery<Posts[]>({
-    queryKey: ["posts"],
-    queryFn: async () => {
-      try {
-        const postData = await axios.get(POST_ENDPOINT);
-        return postData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-  });
+  const { posts, isLoading, refetch, isRefetching } = postApi(POST_ENDPOINT);
 
   // Refetch posts when feedType, username, or refetch function changes
   useEffect(() => {

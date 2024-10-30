@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
 
 import XSvg from "../../../components/svgs/svg";
 
@@ -10,9 +8,8 @@ import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RegisterDataProps } from "../../../shared/interface/AuthData";
-import { User } from "../../../shared/interface/User";
+import signupUserApi from "../../../api/auth/SignupUser";
 
 const SignUpPage = () => {
   // Initialize form data state
@@ -23,34 +20,13 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const queryClient = useQueryClient();
-  // Mutation for signup with error handling
-  const { mutate, isError, isPending } = useMutation({
-    mutationFn: async () => {
-      try {
-        const { email, name, username, password } = formData;
-        await axios.post<User>("/api/auth/signup", {
-          email,
-          username,
-          name,
-          password,
-        });
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          throw toast.error(`${error.response.data.error}`);
-        }
-      }
-    },
-    onSuccess: () => {
-      toast.success("Account created successfully");
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-    },
-  });
+  // Signup APIs
+  const { signupMutation, isPending, isError } = signupUserApi();
 
   // Form submit handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutate();
+    signupMutation(formData);
   };
 
   // Update form data on input change

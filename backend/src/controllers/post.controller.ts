@@ -1,10 +1,64 @@
 import Post from "../models/post.model";
 import User from "../models/user.model";
-import cloudinary from "../cloudinary/CloudinaryConfig";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { Request, Response } from "express";
 import Notification from "../models/notification.model";
 import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
+import { imageKit } from "../imageKit/ImageKitConfig";
+
+/**
+ * Returns all Posts
+ * @param req Request object
+ * @param res Response object
+ */
+const getAllPosts = async (req: CustomRequest, res: Response) => {
+  try {
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "name username profileImg",
+      })
+      .populate({
+        path: "comments.user",
+        select: "name username profileImg",
+      });
+
+    if (posts.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Get all Posts liked by user
+ * @param req Request object with userId
+ * @param res Response object
+ */
+const getLikedPosts = async (req: CustomRequest, res: Response) => {
+  const userId = req?.params?.id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
+      .populate({
+        path: "user",
+        select: "name username profileImg",
+      })
+      .populate({
+        path: "comments.user",
+        select: "name username profileImg",
+      });
+
+    return res.status(200).json(likedPosts);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 /**
  * Create a new post
@@ -14,7 +68,7 @@ import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 const createPost = async (req: CustomRequest, res: Response) => {
   try {
     const { text }: { text: string } = req?.body;
-    let { img } = req?.body;
+    let { img }: { img: string } = req?.body;
     if (!text) {
       return res.status(400).json({ error: "Text fields is required" });
     }
@@ -32,23 +86,28 @@ const createPost = async (req: CustomRequest, res: Response) => {
         .json({ error: `Text must be less than ${maxLength} characters` });
     }
 
-    /*
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.fron(bytes);
-    const uploadStream = await cloudinary.uploader.upload_stream({
-    folder : "Connect- Hub"});
-    uploadStream.end(buffer);
-    */
-
-    // Upload image to cloudinary if provided
+    // Upload image to imageKit if provided
+    let uploadedResponse;
     if (img) {
-      const uploadedResponse = await cloudinary.uploader.upload(img, {
-        folder: "Connect-Hub",
-      });
-      img = uploadedResponse.secure_url;
-    }
+      try {
+        uploadedResponse = await imageKit.upload({
+          file: img,
+          fileName: "uploaded_image.jpg",
+          folder: "Connect-Hub",
+        });
 
-    const newPost = new Post({ user: userId, text, img });
+        // Set img to the URL returned by ImageKit
+        img = uploadedResponse.url;
+      } catch (error) {
+        console.error("Image upload failed:", error);
+      }
+    }
+    const newPost = new Post({
+      user: userId,
+      text,
+      img,
+      imgFileId: uploadedResponse?.fileId,
+    });
     await newPost.save();
     return res.status(201).json(newPost);
   } catch (err) {
@@ -92,9 +151,8 @@ const deletePost = async (req: CustomRequest, res: Response) => {
     }
 
     // If post has a image, remove it from Cloudinary
-    if (post?.img) {
-      const imgId = post?.img?.split("/")?.pop()?.split(".")[0];
-      await cloudinary.uploader.destroy(imgId as string);
+    if (post?.imgFileId) {
+      await imageKit.deleteFile(post.imgFileId);
     }
 
     await Post.findByIdAndDelete(req?.params?.id);
@@ -190,64 +248,6 @@ const commentOnPost = async (req: CustomRequest, res: Response) => {
 
     res.status(200).json(post);
   } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-/**
- * Returns all Posts
- * @param req Request object
- * @param res Response object
- */
-const getAllPosts = async (req: CustomRequest, res: Response) => {
-  try {
-    const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .populate({
-        path: "user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
-      })
-      .populate({
-        path: "comments.user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
-      });
-
-    if (posts.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    return res.status(200).json(posts);
-  } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-/**
- * Get all Posts liked by user
- * @param req Request object
- * @param res Response object
- */
-const getLikedPosts = async (req: CustomRequest, res: Response) => {
-  const userId = req?.params?.id;
-  try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
-      .populate({
-        path: "user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
-      })
-      .populate({
-        path: "comments.user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
-      });
-
-    return res.status(200).json(likedPosts);
-  } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
 };

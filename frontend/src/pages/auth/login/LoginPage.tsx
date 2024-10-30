@@ -2,14 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import XSvg from "../../../components/svgs/svg";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { User } from "../../../shared/interface/User";
 
 import { MdOutlineMail } from "react-icons/md";
 import { MdPassword } from "react-icons/md";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoginDataProps } from "../../../shared/interface/AuthData";
+import loginUserApi from "../../../api/auth/LoginUser";
 
 const LoginPage = () => {
   // Initialize form data state
@@ -18,36 +15,13 @@ const LoginPage = () => {
     password: "",
   });
 
-  const queryClient = useQueryClient();
-  // Login mutation with success and error handling
-  const {
-    mutate: loginMutation,
-    isPending,
-    isError,
-  } = useMutation({
-    mutationFn: async () => {
-      try {
-        const { username, password } = formData;
-        await axios.post<User>("/api/auth/login", {
-          username,
-          password,
-        });
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          throw toast.error(`${error.response.data.error}`);
-        }
-      }
-    },
-    onSuccess: () => {
-      toast.success("Login Successful");
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-    },
-  });
+  // Login APIs
+  const { loginMutation, isPending, isError } = loginUserApi();
 
   // Form submit handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation();
+    loginMutation(formData);
   };
 
   // Update form data on input change

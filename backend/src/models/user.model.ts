@@ -25,7 +25,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profileImgFileId: {
+      type: String,
+      default: "",
+    },
     coverImg: {
+      type: String,
+      default: "",
+    },
+    coverImgFileId: {
       type: String,
       default: "",
     },

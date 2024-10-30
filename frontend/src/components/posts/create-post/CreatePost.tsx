@@ -2,10 +2,9 @@ import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
-import axios from "axios";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import { User } from "../../../shared/interface/User";
+import postApi from "../../../api/posts/Posts";
 
 const CreatePost = () => {
   const [text, setText] = useState<string>("");
@@ -14,37 +13,15 @@ const CreatePost = () => {
 
   // Fetch authenticated user data
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
-  const queryClient = useQueryClient();
-  // Mutation for creating a post
-  const {
-    mutate: createPost,
-    isPending,
-    isError,
-  } = useMutation({
-    mutationFn: async () => {
-      try {
-        const postData = { text, img };
-        const createdPost = await axios.post("/api/posts/create", postData);
-        return createdPost.data;
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          throw toast.error(`${error.response.data.error}`);
-        }
-      }
-    },
 
-    onSuccess: () => {
-      setText("");
-      setImg(null);
-      toast.success("Post created successfully");
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
+  const { createPost, isError, isPending } = postApi();
 
-  // Handle form submission
+  // Handle post creation
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createPost();
+    createPost({ text, img });
+    setText("");
+    setImg(null);
   };
 
   // Handle image file selection

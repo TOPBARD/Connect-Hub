@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
 import { User } from "../../shared/interface/User";
+import toast from "react-hot-toast";
+import { UpdateProfileProps } from "../../shared/interface/UpdateProfile";
+import profileApi from "../../api/profile/Profile";
 
 const EditProfileModal = ({ authUser }: { authUser: User }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UpdateProfileProps>({
     name: "",
     username: "",
     email: "",
@@ -13,7 +15,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
     currentPassword: "",
   });
 
-  const { updateProfile, isUpdatingProfile } = useUpdateUserProfile();
+  const { updateProfileDetails, isUpdatingProfileDetails } = profileApi();
 
   const handleInputChange = (
     e:
@@ -36,6 +38,15 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
       });
     }
   }, [authUser]);
+
+  const handleProfileUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.username || !formData.email) {
+      toast.error(`Please fill the required fields`);
+      return;
+    }
+    updateProfileDetails(formData);
+  };
   return (
     <>
       {/* Button to open the edit profile modal */}
@@ -55,13 +66,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
       <dialog id="edit_profile_modal" className="modal">
         <div className="modal-box border rounded-md border-gray-700 shadow-md">
           <h3 className="font-bold text-lg my-3">Update Profile</h3>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              updateProfile(formData);
-            }}
-          >
+          <form className="flex flex-col gap-4" onSubmit={handleProfileUpdate}>
             {/* Full Name and Username Input Fields */}
             <div className="flex flex-wrap gap-2">
               <input
@@ -69,8 +74,9 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
                 placeholder="Full Name"
                 className="flex-1 input border border-gray-700 rounded p-2 input-md"
                 value={formData.name}
-                name="fullName"
+                name="name"
                 onChange={handleInputChange}
+                required
               />
               <input
                 type="text"
@@ -79,6 +85,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
                 value={formData.username}
                 name="username"
                 onChange={handleInputChange}
+                required
               />
             </div>
 
@@ -91,6 +98,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
                 value={formData.email}
                 name="email"
                 onChange={handleInputChange}
+                required
               />
               <textarea
                 placeholder="Bio"
@@ -133,7 +141,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
 
             {/* Submit Button */}
             <button className="btn btn-primary rounded-full btn-sm text-white">
-              {isUpdatingProfile ? "Updating..." : "Update"}
+              {isUpdatingProfileDetails ? "Updating..." : "Update"}
             </button>
           </form>
         </div>

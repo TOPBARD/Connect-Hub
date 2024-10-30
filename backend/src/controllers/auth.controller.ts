@@ -5,6 +5,7 @@ import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
 import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { addDefaultFollowers } from "../shared/helper/addDefaultFollowers";
+import { emailValidation, passwordMatching } from "../shared/helper/validation";
 
 /**
  * Sign up a new user
@@ -18,8 +19,7 @@ const signupUser = async (req: Request, res: Response) => {
     if (!name || !email || !username || !password) {
       return res.status(400).json({ error: "Please fill the required fields" });
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailValidation(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
     const existingUser = await User.findOne({ username });
@@ -85,8 +85,7 @@ const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid username or password" });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect)
+    if (!passwordMatching(password, user.password))
       return res.status(400).json({ error: "Invalid username or password" });
 
     generateTokenAndSetCookie(user.id, res);
@@ -98,7 +97,7 @@ const loginUser = async (req: Request, res: Response) => {
       link: user.link,
       followers: user.followers,
       following: user.following,
-      likedPosts : user.likedPosts,
+      likedPosts: user.likedPosts,
       bio: user.bio,
       profileImg: user.profileImg,
       coverImg: user.coverImg,
@@ -110,8 +109,8 @@ const loginUser = async (req: Request, res: Response) => {
 
 /**
  * Log out a user
- * @param req Request object
- * @param res Response object
+ * @param req Request object with jwtAuthToken
+ * @param res Response object without token
  */
 const logoutUser = (req: Request, res: Response) => {
   try {
