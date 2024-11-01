@@ -27,6 +27,10 @@
     "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "alwaysStrict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

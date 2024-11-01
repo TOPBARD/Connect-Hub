@@ -1,31 +1,18 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import SignUpPage from "./pages/auth/signup/SignUpPage";
 import LoginPage from "./pages/auth/login/LoginPage";
 import HomePage from "./pages/home/HomePage";
 import Sidebar from "./components/sidebar/Sidebar";
 import RightPanel from "./components/right-panel/RightPanel";
 import NotificationPage from "./pages/notification/NotificationPage";
-import axios from "axios";
 import ProfilePage from "./pages/profile/ProfilePage";
 import LoadingSpinner from "./shared/loading-spinner/LoadingSpinner";
-import { useQuery } from "@tanstack/react-query";
-import { User } from "./shared/interface/User";
+import ChatPage from "./pages/chat/ChatPage";
+import authUserApi from "./api/auth/AuthUser";
 
 function App() {
-  // Fetch authenticated user data; disable retry on failure
-  const { data: authUser, isLoading } = useQuery<User | null>({
-    queryKey: ["authUser"],
-    queryFn: async () => {
-      try {
-        const currentUser = await axios.get("/api/auth/me");
-        if (!currentUser.data) return null;
-        return currentUser.data;
-      } catch (error) {
-        return null;
-      }
-    },
-    retry: false,
-  });
+  const { authUser, isLoading } = authUserApi();
+  const location = useLocation();
 
   // Show loading spinner while authentication is in progress
   if (isLoading) {
@@ -59,8 +46,12 @@ function App() {
           path="/profile/:username"
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/chat"
+          element={authUser ? <ChatPage /> : <Navigate to="/login" />}
+        />
       </Routes>
-      {authUser && <RightPanel />}
+      {authUser && location.pathname !== "/chat" && <RightPanel />}
     </div>
   );
 }

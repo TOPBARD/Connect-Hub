@@ -6,10 +6,10 @@ import userRoutes from "./src/routes/user.route";
 import authRoutes from "./src/routes/auth.route";
 import postRoutes from "./src/routes/post.route";
 import notificationRoutes from "./src/routes/notification.route";
+import messageRoutes from "./src/routes/message.route";
 import { Response, Request } from "express";
+import { app, server } from "./src/socket/socket";
 import cors from "cors";
-
-const app = express();
 
 dotenv.config();
 connectDB();
@@ -27,11 +27,12 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Hello from backend" });
 });
 
-app.listen(PORT, () =>
+server.listen(PORT, () =>
   console.log(`Server started at http://localhost:${PORT}`)
 );
