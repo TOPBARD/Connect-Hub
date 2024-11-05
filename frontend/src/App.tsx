@@ -8,10 +8,10 @@ import NotificationPage from "./pages/notification/NotificationPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import LoadingSpinner from "./shared/loading-spinner/LoadingSpinner";
 import ChatPage from "./pages/chat/ChatPage";
-import authUserApi from "./api/auth/AuthUser";
+import getUserApi from "./api/auth/GetAuthUser";
 
 function App() {
-  const { authUser, isLoading } = authUserApi();
+  const { authUser, isLoading } = getUserApi();
   const location = useLocation();
 
   // Show loading spinner while authentication is in progress

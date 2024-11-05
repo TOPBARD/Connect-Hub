@@ -1,10 +1,10 @@
-import Message from "../models/message.model";
-import Conversation from "../models/conversation.model";
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import Message from "../models/message.model";
+import Conversation from "../models/conversation.model";
 
 dotenv.config();
 const app = express();
@@ -29,9 +29,9 @@ export const getRecipientSocketId = (recipientId: string) => {
 // Socket Connection On
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId as string;
-
-  if (userId != "undefined") userSocketMap[userId] = socket.id;
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  socket.join(userId);
+  userSocketMap[userId] = socket.id;
+  io.emit("online-users", Object.keys(userSocketMap));
 
   socket.on(
     "markMessagesAsSeen",
@@ -57,11 +57,10 @@ io.on("connection", (socket) => {
       }
     }
   );
-
   //Socket Connection Off
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    io.emit("online-users", Object.keys(userSocketMap));
   });
 });
 

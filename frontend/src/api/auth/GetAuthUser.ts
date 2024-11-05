@@ -2,7 +2,7 @@ import axios from "axios";
 import { User } from "../../shared/interface/User";
 import { useQuery } from "@tanstack/react-query";
 
-const authUserApi = () => {
+const getUserApi = () => {
   const { data: authUser, isLoading } = useQuery<User | null>({
     queryKey: ["authUser"],
     queryFn: async () => {
@@ -19,4 +19,4 @@ const authUserApi = () => {
   return { authUser, isLoading };
 };
 
-export default authUserApi;
+export default getUserApi;

@@ -2,9 +2,9 @@ import Conversation from "../models/conversation.model";
 import Message from "../models/message.model";
 import { Response } from "express";
 import { CustomRequest } from "../shared/interface/CustomRequest";
-import { getRecipientSocketId } from "../socket/socket";
-import { io } from "../socket/socket";
 import { imageKit } from "../imageKit/ImageKitConfig";
+import { getRecipientSocketId, io } from "../socket/socket";
+import User from "../models/user.model";
 
 /**
  * Send a message
@@ -13,21 +13,21 @@ import { imageKit } from "../imageKit/ImageKitConfig";
  */
 async function sendMessage(req: CustomRequest, res: Response) {
   try {
-    const { recipientId, message }: { recipientId: string; message: string } =
-      req?.body;
+    const { participantId } = req.params;
+    const { text }: { text: string } = req?.body;
     let { img }: { img: string } = req?.body;
     const senderId = req?.user?._id;
 
     // Find or create conversation between sender and recipient
     let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, recipientId] },
+      participants: { $all: [senderId, participantId] },
     });
 
     if (!conversation) {
       conversation = new Conversation({
-        participants: [senderId, recipientId],
+        participants: [senderId, participantId],
         lastMessage: {
-          text: message,
+          text,
           sender: senderId,
         },
       });
@@ -55,7 +55,7 @@ async function sendMessage(req: CustomRequest, res: Response) {
     const newMessage = new Message({
       conversationId: conversation?._id,
       sender: senderId,
-      text: message,
+      text,
       img: img || "",
       imgFileId: uploadedResponse?.fileId,
     });
@@ -65,14 +65,14 @@ async function sendMessage(req: CustomRequest, res: Response) {
       newMessage.save(),
       conversation.updateOne({
         lastMessage: {
-          text: message,
+          text,
           sender: senderId,
         },
       }),
     ]);
 
     // Emit new message event to recipient's socket if available
-    const recipientSocketId = getRecipientSocketId(recipientId);
+    const recipientSocketId = getRecipientSocketId(participantId);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("newMessage", newMessage);
     }
@@ -89,23 +89,26 @@ async function sendMessage(req: CustomRequest, res: Response) {
  * @param res Response object
  */
 async function getMessages(req: CustomRequest, res: Response) {
-  const { otherUserId } = req?.params;
+  const { participantId } = req?.params;
   const userId = req?.user?._id;
   try {
     const conversation = await Conversation.findOne({
-      participants: { $all: [userId, otherUserId] },
+      participants: { $all: [userId, participantId] },
     });
 
     if (!conversation) {
       return res.status(404).json({ error: "Conversation not found" });
     }
+    const participant = await User.findById(participantId).select(
+      "username profileImg"
+    );
 
     // Find messages for the conversation and sort by creation date
     const messages = await Message.find({
       conversationId: conversation?._id,
     }).sort({ createdAt: 1 });
 
-    return res.status(200).json(messages);
+    return res.status(200).json({ participant, messages });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }

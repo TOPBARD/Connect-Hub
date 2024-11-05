@@ -10,7 +10,7 @@ import { User } from "../../../shared/interface/User";
 import { formatPostDate } from "../../../shared/functions/DataFormatter";
 import LoadingSpinner from "../../../shared/loading-spinner/LoadingSpinner";
 import { PostComment, Posts } from "../../../shared/interface/Post";
-import singlePostApi from "../../../api/posts/SinglePost";
+import singlePostApi from "../../../api/posts/PostAction";
 
 const Post = ({ post }: { post: Posts }) => {
   const { data: authUser } = useQuery<User>({

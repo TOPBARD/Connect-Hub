@@ -74,6 +74,19 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
   }
 };
 
+const getSearchUsers = async (req: CustomRequest, res: Response) => {
+  const { username } = req?.params;
+  try {
+    const searchQuery = new RegExp(username, "i");
+    const users = await User.find({
+      $or: [{ name: searchQuery }, { username: searchQuery }],
+    }).select("name username profileImg");
+    return res.status(200).json(users);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 /**
  * Follow/Unfollow a user
  * @param req Request object containing the userId of the user to follow/Unfollow
@@ -291,6 +304,7 @@ const updateUserImg = async (req: CustomRequest, res: Response) => {
 export {
   followUnfollowUser,
   updateUserImg,
+  getSearchUsers,
   updateUserProfile,
   getUserProfile,
   getSuggestedUsers,
