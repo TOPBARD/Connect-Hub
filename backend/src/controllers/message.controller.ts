@@ -7,18 +7,33 @@ import { getRecipientSocketId, io } from "../socket/socket";
 import User from "../models/user.model";
 
 /**
- * Send a message
- * @param req Request object containing sender's ID, recipient's ID, message content, and optionally an image
- * @param res Response object
+ * Sends a message between two participants.
+ * @param req - Express Request object containing the sender's ID, recipient's ID, message content, and optionally an image
+ * @param res - Express Response object to send back the response
+ * @returns - A response with the created message or an error message
  */
-async function sendMessage(req: CustomRequest, res: Response) {
+async function sendMessage(
+  req: CustomRequest,
+  res: Response
+): Promise<Response> {
   try {
     const { participantId } = req.params;
     const { text }: { text: string } = req?.body;
     let { img }: { img: string } = req?.body;
     const senderId = req?.user?._id;
 
-    // Find or create conversation between sender and recipient
+    if (!senderId || !participantId) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    // Verify at least 1 field should be present.
+    if (!text && !img) {
+      return res
+        .status(400)
+        .json({ error: "Message or Image field is missing" });
+    }
+
+    // Find or create a conversation between the sender and recipient
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, participantId] },
     });
@@ -34,7 +49,7 @@ async function sendMessage(req: CustomRequest, res: Response) {
       await conversation.save();
     }
 
-    // Upload image to cloudinary if provided
+    // If an image is provided, upload it to ImageKit
     let uploadedResponse;
     if (img) {
       try {
@@ -43,15 +58,13 @@ async function sendMessage(req: CustomRequest, res: Response) {
           fileName: "uploaded_image.jpg",
           folder: "Connect-Hub-Messages",
         });
-
-        // Set img to the URL returned by ImageKit
         img = uploadedResponse.url;
       } catch (error) {
         console.error("Image upload failed:", error);
       }
     }
 
-    // Create new message
+    // Create a new message document
     const newMessage = new Message({
       conversationId: conversation?._id,
       sender: senderId,
@@ -60,7 +73,7 @@ async function sendMessage(req: CustomRequest, res: Response) {
       imgFileId: uploadedResponse?.fileId,
     });
 
-    // Save new message and update last message in conversation
+    // Save the new message and update the conversation's last message
     await Promise.all([
       newMessage.save(),
       conversation.updateOne({
@@ -71,7 +84,7 @@ async function sendMessage(req: CustomRequest, res: Response) {
       }),
     ]);
 
-    // Emit new message event to recipient's socket if available
+    // Emit a real-time update to the recipient if their socket is connected
     const recipientSocketId = getRecipientSocketId(participantId);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("newMessage", newMessage);
@@ -84,14 +97,20 @@ async function sendMessage(req: CustomRequest, res: Response) {
 }
 
 /**
- * Get messages for a conversation
- * @param req Request object containing user's ID and the other user's ID (conversation partner)
- * @param res Response object
+ * Retrieves messages for a given conversation.
+ * @param req - Express Request object containing the user's ID and the conversation participant ID
+ * @param res - Express Response object to send back the response
+ * @returns - A response with the conversation's messages or an error message
  */
-async function getMessages(req: CustomRequest, res: Response) {
+async function getMessages(
+  req: CustomRequest,
+  res: Response
+): Promise<Response> {
   const { participantId } = req?.params;
   const userId = req?.user?._id;
+
   try {
+    // Check if the conversation exists between the user and participant
     const conversation = await Conversation.findOne({
       participants: { $all: [userId, participantId] },
     });
@@ -99,11 +118,12 @@ async function getMessages(req: CustomRequest, res: Response) {
     if (!conversation) {
       return res.status(404).json({ error: "Conversation not found" });
     }
+
+    // Retrieve participant details (username and profile image)
     const participant = await User.findById(participantId).select(
       "username profileImg"
     );
 
-    // Find messages for the conversation and sort by creation date
     const messages = await Message.find({
       conversationId: conversation?._id,
     }).sort({ createdAt: 1 });
@@ -115,14 +135,19 @@ async function getMessages(req: CustomRequest, res: Response) {
 }
 
 /**
- * Get user conversations
- * @param req Request object containing user's ID
- * @param res Response object
+ * Retrieves all conversations for the current user.
+ * @param req - Express Request object containing the user's ID
+ * @param res - Express Response object to send back the response
+ * @returns - A response with the user's conversations or an error message
  */
-async function getConversations(req: CustomRequest, res: Response) {
+async function getConversations(
+  req: CustomRequest,
+  res: Response
+): Promise<Response> {
   const userId = req?.user?._id;
+
   try {
-    // Find conversations where the user is a participant and populate participant details
+    // Retrieve conversations where the user is a participant
     const conversations = await Conversation.find({
       participants: userId,
     }).populate({
@@ -130,12 +155,13 @@ async function getConversations(req: CustomRequest, res: Response) {
       select: "username profileImg",
     });
 
-    // Remove the current user from the participants array in each conversation
+    // Remove the current user from the participants list in each conversation
     conversations.forEach((conversation) => {
       conversation.participants = conversation.participants.filter(
         (participant) => participant?._id.toString() !== userId?.toString()
       );
     });
+
     return res.status(200).json(conversations);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });

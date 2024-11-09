@@ -11,6 +11,8 @@ export default {
         "gray-secondary": "hsl(var(--gray-secondary))",
         "gray-tertiary": "hsl(var(--gray-tertiary))",
         "left-panel": "hsl(var(--left-panel))",
+        "chat-header": "hsl(var(--chat-header))",
+        "chat-placeholder": "hsl(var(--chat-placeholder))",
         "chat-hover": "hsl(var(--chat-hover))",
         "green-primary": "hsl(var(--green-primary))",
         "green-secondary": "hsl(var(--green-secondary))",

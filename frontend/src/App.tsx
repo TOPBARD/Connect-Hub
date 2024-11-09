@@ -8,7 +8,7 @@ import NotificationPage from "./pages/notification/NotificationPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import LoadingSpinner from "./shared/loading-spinner/LoadingSpinner";
 import ChatPage from "./pages/chat/ChatPage";
-import getUserApi from "./api/auth/GetAuthUser";
+import getUserApi from "./api/auth/auth.user";
 
 function App() {
   const { authUser, isLoading } = getUserApi();

@@ -17,7 +17,7 @@ const ChatPage = () => {
 
         {/**message component**/}
         <section
-          className={`ml-1 w-full h-full lg:flex flex-col items-center justify-center ${
+          className={` w-full h-full lg:flex flex-col items-center justify-center ${
             !selectedConversationId && "hidden"
           }`}
         >

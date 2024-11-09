@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import {
   Conversations,
+  Message,
   MessageData,
   MessagesWithParticipantData,
 } from "@/shared/interface/Chat";
@@ -31,7 +32,12 @@ const conversationApi = (selectedConversationId?: string) => {
     },
   });
 
-  const { data: messages, refetch } = useQuery({
+  const {
+    data: messages,
+    refetch,
+    isRefetching,
+    isPending: loadingMessages,
+  } = useQuery({
     queryKey: ["messages"],
     queryFn: async () => {
       try {
@@ -53,24 +59,51 @@ const conversationApi = (selectedConversationId?: string) => {
   } = useMutation({
     mutationFn: async (messageData: MessageData) => {
       try {
-        await axios.post(`/api/messages/${selectedConversationId}`, messageData);
+        const response = await axios.post(
+          `/api/messages/${selectedConversationId}`,
+          messageData
+        );
+        return response.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           throw toast.error(`${error.response.data.error}`);
         }
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    onSuccess: (newMessage: Message) => {
+      queryClient.setQueryData<MessagesWithParticipantData | null>(
+        ["messages"],
+        (oldData) => {
+          if (!oldData) return null;
+          // Append the new message to the existing message list
+          return {
+            ...oldData,
+            messages: [...oldData.messages, newMessage],
+          };
+        }
+      );
+      queryClient.setQueryData<Conversations[] | null>(
+        ["conversations"],
+        (oldConversations) => {
+          if (!oldConversations) return null;
+          return oldConversations.map((conversation) =>
+            conversation._id === selectedConversationId
+              ? { ...conversation, lastMessage: newMessage }
+              : conversation
+          );
+        }
+      );
     },
   });
   return {
     conversations,
     messages,
     refetch,
+    isRefetching,
     sendMessageMutation,
     isPending,
     loadingConversation,
+    loadingMessages,
     isError,
   };
 };

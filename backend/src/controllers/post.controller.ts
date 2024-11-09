@@ -7,12 +7,17 @@ import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 import { imageKit } from "../imageKit/ImageKitConfig";
 
 /**
- * Returns all Posts
- * @param req Request object
- * @param res Response object
+ * Fetches all posts, sorted by the creation date (latest first)
+ * @param req - Express Request object
+ * @param res - Express Response object
+ * @returns - JSON array of all posts or an error response
  */
-const getAllPosts = async (req: CustomRequest, res: Response) => {
+const getAllPosts = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
+    // Find all post, populate user(name, username, profileImg), comments.user(name, username, porfileImg).
     const posts = await Post.find()
       .sort({ createdAt: -1 })
       .populate({
@@ -24,26 +29,28 @@ const getAllPosts = async (req: CustomRequest, res: Response) => {
         select: "name username profileImg",
       });
 
-    if (posts.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    return res.status(200).json(posts);
+    return res.status(200).json(posts.length ? posts : []);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
- * Get all Posts liked by user
- * @param req Request object with userId
- * @param res Response object
+ * Fetches all posts liked by a specific user.
+ * @param req - Express Request object with userId as a parameter
+ * @param res - Express Response object
+ * @returns - JSON array of liked posts or an error response
  */
-const getLikedPosts = async (req: CustomRequest, res: Response) => {
+const getLikedPosts = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   const userId = req?.params?.id;
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Fetch all liked post, populate user(name, username, profileImg), comment.user(name, username, profileImg).
     const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
       .populate({
         path: "user",
@@ -61,24 +68,31 @@ const getLikedPosts = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Create a new post
- * @param req Request object containing postedBy (user ID), text, and optionally an image
- * @param res Response object
+ * Creates a new post with optional image upload to ImageKit.
+ * @param req - Express Request object containing text, optional image, and user ID
+ * @param res - Express Response object
+ * @returns - JSON object of the created post or an error response
  */
-const createPost = async (req: CustomRequest, res: Response) => {
+const createPost = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const { text }: { text: string } = req?.body;
     let { img }: { img: string } = req?.body;
-    if (!text) {
-      return res.status(400).json({ error: "Text fields is required" });
+
+    // Check at least 1 of text or img filed is present.
+    if (!text && !img) {
+      return res.status(400).json({ error: "Text or img fields is required" });
     }
+
     const userId = req?.user?._id.toString();
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Limit max length of the post to 500
+    // Validate text length
     const maxLength = 500;
     if (text.length > maxLength) {
       return res
@@ -86,7 +100,7 @@ const createPost = async (req: CustomRequest, res: Response) => {
         .json({ error: `Text must be less than ${maxLength} characters` });
     }
 
-    // Upload image to imageKit if provided
+    // Upload image to ImageKit if provided
     let uploadedResponse;
     if (img) {
       try {
@@ -95,8 +109,6 @@ const createPost = async (req: CustomRequest, res: Response) => {
           fileName: "uploaded_image.jpg",
           folder: "Connect-Hub",
         });
-
-        // Set img to the URL returned by ImageKit
         img = uploadedResponse.url;
       } catch (error) {
         console.error("Image upload failed:", error);
@@ -109,6 +121,7 @@ const createPost = async (req: CustomRequest, res: Response) => {
       imgFileId: uploadedResponse?.fileId,
     });
     await newPost.save();
+
     return res.status(201).json(newPost);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
@@ -116,11 +129,12 @@ const createPost = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Get a post by ID
- * @param req Request object containing the post ID
- * @param res Response object
+ * Fetches a single post by ID.
+ * @param req - Express Request object with postId as a parameter
+ * @param res - Express Response object
+ * @returns - JSON object of the post or an error response
  */
-const getPost = async (req: Request, res: Response) => {
+const getPost = async (req: Request, res: Response): Promise<Response> => {
   try {
     const post = await Post.findById(req?.params?.id);
 
@@ -135,22 +149,27 @@ const getPost = async (req: Request, res: Response) => {
 };
 
 /**
- * Delete a post by ID
- * @param req Request object containing the post ID
- * @param res Response object
+ * Deletes a post by ID.
+ * @param req - Express Request object with postId as a parameter
+ * @param res - Express Response object
+ * @returns - JSON message of successful deletion or an error response
  */
-const deletePost = async (req: CustomRequest, res: Response) => {
+const deletePost = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const post = await Post.findById(req?.params?.id);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
+    // Check to prevent deleting other user post
     if (post?.user.toString() !== req?.user?._id.toString()) {
       return res.status(401).json({ error: "Unauthorized to delete post" });
     }
 
-    // If post has a image, remove it from Cloudinary
+    // If post has a image, remove it from imageKit
     if (post?.imgFileId) {
       await imageKit.deleteFile(post.imgFileId);
     }
@@ -164,11 +183,15 @@ const deletePost = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Like/Unlike a post by ID
- * @param req Request object containing the post ID
- * @param res Response object
+ * Likes or unlikes a post.
+ * @param req - Express Request object with postId and userId
+ * @param res - Express Response object
+ * @returns - Updated list of likes or an error response
  */
-const likeUnlikePost = async (req: CustomRequest, res: Response) => {
+const likeUnlikePost = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const { id: postId } = req?.params;
     const userId = req?.user?._id;
@@ -192,6 +215,7 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
         const updatedLikes = post.likes.filter(
           (id) => id.toString() !== userId.toString()
         );
+
         return res.status(200).json(updatedLikes);
       } catch (error) {
         return res.status(500).json({ error: "Failed to unlike post" });
@@ -203,6 +227,8 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
         await Promise.all([
           User.updateOne({ _id: userId }, { $push: { likedPosts: postId } }),
           post.save(),
+
+          // Create new notification for liking post
           new Notification({
             from: userId,
             to: post.user,
@@ -211,6 +237,7 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
         ]);
 
         const updatedLikes = post.likes;
+
         return res.status(200).json(updatedLikes);
       } catch (error) {
         return res.status(500).json({ error: "Failed to like post" });
@@ -222,16 +249,21 @@ const likeUnlikePost = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Reply to a post by ID
- * @param req Request object containing the post ID and reply text
- * @param res Response object
+ * Adds a comment to a post by ID.
+ * @param req - Express Request object with postId and comment text
+ * @param res - Express Response object
+ * @returns - Updated post with the new comment or an error response
  */
-const commentOnPost = async (req: CustomRequest, res: Response) => {
+const commentOnPost = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const { text }: { text: string } = req?.body;
     const postId = req?.params?.id;
     const userId = req?.user?._id;
 
+    // Validate text is present.
     if (!text) {
       return res.status(400).json({ error: "Text field is required" });
     }
@@ -246,18 +278,22 @@ const commentOnPost = async (req: CustomRequest, res: Response) => {
     post.comments.push(comment);
     await post.save();
 
-    res.status(200).json(post);
+    return res.status(200).json(post);
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
- * Get all Posts by followers
- * @param req Request object containing the username
- * @param res Response object
+ * Fetches posts from users that the current user is following.
+ * @param req - Express Request object with userId
+ * @param res - Express Response object
+ * @returns - JSON array of posts from followed users or an error response
  */
-const getFollowersPosts = async (req: CustomRequest, res: Response) => {
+const getFollowersPosts = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const userId = req?.user?._id;
     const user = await User.findById(userId);
@@ -265,17 +301,16 @@ const getFollowersPosts = async (req: CustomRequest, res: Response) => {
 
     const following = user.following;
 
+    // Fetch all post posted by following user, populate user(name, username, profileImg), comment.user(name, username, profileImg).
     const feedPosts = await Post.find({ user: { $in: following } })
       .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+        select: "name username profileImg",
       })
       .populate({
         path: "comments.user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+        select: "name username profileImg",
       });
 
     return res.status(200).json(feedPosts);
@@ -285,28 +320,33 @@ const getFollowersPosts = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Get user Posts
- * @param req Request object containing the username
- * @param res Response object
+ * Fetches our posts.
+ * @param req - Express Request object with our username
+ * @param res - Express Response object
+ * @returns - JSON array of our posts or an error response
  */
-const getUserPosts = async (req: CustomRequest, res: Response) => {
+const getUserPosts = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const { username } = req?.params;
 
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Fetch all our post , populate user(name, username, profileImg), comment.user(name, username, profileImg).
     const posts = await Post.find({ user: user._id })
       .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+        select: "name username profileImg",
       })
       .populate({
         path: "comments.user",
-        select:
-          "-password -email -createdAt -updatedAt -isFrozen -bio -followers -following -likedPosts -link",
+        select: "name username profileImg",
       });
+
     return res.status(200).json(posts);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });

@@ -5,11 +5,13 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import { NOTIFICATIONACTION } from "../../shared/enums/NotificationAction";
-import notificationApi from "../../api/notification/Notifications";
+import notificationApi from "../../api/notification/notification";
+import notificationActionApi from "@/api/notification/notification.action";
 
 const NotificationPage = () => {
   // Notification APIs
-  const { notifications, deleteNotifications, isLoading } = notificationApi();
+  const { notifications, isLoading } = notificationApi();
+  const { deleteNotifications } = notificationActionApi();
 
   return (
     <>

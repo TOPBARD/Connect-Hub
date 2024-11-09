@@ -21,8 +21,6 @@ export const SelectConversationContextProvider = ({
   const [selectedConversationId, setSelectedConversationId] =
     useState<string>("");
   const [participantId, setParticipantId] = useState<string>("");
-  console.log(participantId);
-  console.log(selectedConversationId);
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversationId(conversationId);
   };

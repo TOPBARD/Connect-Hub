@@ -1,7 +1,5 @@
 import XSvg from "../svgs/svg";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { MdHomeFilled } from "react-icons/md";
 import { IoNotifications } from "react-icons/io5";
@@ -10,27 +8,10 @@ import { Link } from "react-router-dom";
 import { BiLogOut } from "react-icons/bi";
 import { User } from "../../shared/interface/User";
 import { BsChatFill } from "react-icons/bs";
+import logoutUserApi from "@/api/auth/logout.user";
 
 const Sidebar = () => {
-  const queryClient = useQueryClient();
-  const { mutate: logout } = useMutation({
-    mutationFn: async () => {
-      try {
-        await axios.post("/api/auth/logout");
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          throw toast.error(`${error.response.data.error}`);
-        }
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      toast.success("Logged out successfully");
-    },
-    onError: () => {
-      toast.error("Logout failed");
-    },
-  });
+  const { logout } = logoutUserApi();
   const { data: authUser } = useQuery<User | null>({
     queryKey: ["authUser"],
   });

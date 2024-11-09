@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { User } from "../../shared/interface/User";
 import toast from "react-hot-toast";
 import { UpdateProfileProps } from "../../shared/interface/UpdateProfile";
-import profileApi from "../../api/profile/Profile";
+import profileActionApi from "@/api/profile/profile.action";
 
 const EditProfileModal = ({ authUser }: { authUser: User }) => {
   const [formData, setFormData] = useState<UpdateProfileProps>({
@@ -15,7 +15,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
     currentPassword: "",
   });
 
-  const { updateProfileDetails, isUpdatingProfileDetails } = profileApi();
+  const { updateProfileDetails, isUpdatingProfileDetails } = profileActionApi();
 
   const handleInputChange = (
     e:

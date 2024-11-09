@@ -1,5 +1,4 @@
 import User from "../models/user.model";
-import Post from "../models/post.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { CustomRequest } from "../shared/interface/CustomRequest";
@@ -11,18 +10,24 @@ import { imageKit } from "../imageKit/ImageKitConfig";
 import { emailValidation, passwordMatching } from "../shared/helper/validation";
 
 /**
- * Get user profile by username
- * @param req Request object with username in params
- * @param res Response object with user data
+ * Fetches a user profile by the given username.
+ * @param req - Express request object containing the username in params.
+ * @param res - Express response object containing user data or an error message.
+ * @returns -  User profile data or error response.
  */
-const getUserProfile = async (req: Request, res: Response) => {
+const getUserProfile = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { username } = req?.params;
   try {
+    // Find the user by username and exclude the (password, email, updatedAt) field
     const user = await User.findOne({ username })
       .select("-password")
       .select("-email")
       .select("-updatedAt");
     if (!user) return res.status(404).json({ error: "User not found" });
+
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
@@ -30,15 +35,20 @@ const getUserProfile = async (req: Request, res: Response) => {
 };
 
 /**
- * Gets Suggested Users
- * @param req Request object containing current user userId
- * @param res Response object with suggested users
+ * Fetches a list of suggested users for the current user.
+ * @param req - Custom request object containing user information.
+ * @param res - Response object containing suggested users or an error message.
+ * @returns - List of suggested users or error response.
  */
-const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
+const getSuggestedUsers = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const userId = req?.user?._id;
     const usersFollowedByYou = await User.findById(userId).select("following");
 
+    // Aggregate to fetch random users excluding the current user
     const users: Users[] = await User.aggregate([
       {
         $match: {
@@ -63,6 +73,8 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
         },
       },
     ]);
+
+    // Filter out users already followed by the current user
     const filteredUsers = users.filter(
       (user) => !usersFollowedByYou?.following.includes(user._id)
     );
@@ -74,13 +86,25 @@ const getSuggestedUsers = async (req: CustomRequest, res: Response) => {
   }
 };
 
-const getSearchUsers = async (req: CustomRequest, res: Response) => {
+/**
+ * Searches for users based on a given username.
+ * @param req - Custom request object with the search query.
+ * @param res - Response object containing search results or an error message.
+ * @returns - List of matching users or error response.
+ */
+const getSearchUsers = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   const { username } = req?.params;
+
   try {
+    // Find users based on given username characters. Select (name, username, profileImg) fields
     const searchQuery = new RegExp(username, "i");
     const users = await User.find({
       $or: [{ name: searchQuery }, { username: searchQuery }],
     }).select("name username profileImg");
+
     return res.status(200).json(users);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
@@ -88,11 +112,15 @@ const getSearchUsers = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Follow/Unfollow a user
- * @param req Request object containing the userId of the user to follow/Unfollow
- * @param res Response object
+ * Toggles the follow/unfollow status between two users.
+ * @param req - Custom request object with the target user's ID.
+ * @param res - Response object indicating success or failure.
+ * @returns - Success or error response.
  */
-const followUnfollowUser = async (req: CustomRequest, res: Response) => {
+const followUnfollowUser = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const { id } = req?.params;
     const currentUserId = req?.user?._id;
@@ -101,6 +129,7 @@ const followUnfollowUser = async (req: CustomRequest, res: Response) => {
       User.findById(currentUserId),
     ]);
 
+    // Check to prevent a user to follow/unfollow themselves
     if (id === currentUserId?.toString()) {
       return res
         .status(400)
@@ -132,12 +161,15 @@ const followUnfollowUser = async (req: CustomRequest, res: Response) => {
         await Promise.all([
           User.findByIdAndUpdate(id, { $push: { followers: currentUserId } }),
           User.findByIdAndUpdate(currentUserId, { $push: { following: id } }),
+
+          // Create new follow notification
           new Notification({
             type: NOTIFICATIONACTION.FOLLOW,
             from: currentUserId,
             to: id,
           }).save(),
         ]);
+
         return res.status(200).json({ message: "User Followed Successfully" });
       } catch (error) {
         return res.status(500).json({ error: "Failed to follow user" });
@@ -149,12 +181,16 @@ const followUnfollowUser = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Update user profile
- * @body User update details
- * @param req Request object containing user id
- * @param res Response object
+ * Updates a user's profile information, including name, email, and password.
+ * @param req - Custom request object containing user update details.
+ * @param res - Response object with updated user data or an error message.
+ * @returns- Updated user profile or error response.
  */
-const updateUserProfile = async (req: CustomRequest, res: Response) => {
+const updateUserProfile = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
+  // Extract details to update from body
   const {
     name,
     email,
@@ -165,24 +201,33 @@ const updateUserProfile = async (req: CustomRequest, res: Response) => {
     link,
   }: UpdateUserProps = req?.body;
   const userId = req?.user?._id;
+
   try {
     let user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
+
+    // Validate missing details
     if (!name || !username || !email) {
       return res.status(400).json({
         error: "Please provide required details",
       });
     }
+
+    // Check if old password is present before updating new password
     if (newPassword && !currentPassword) {
       return res.status(400).json({
         error: "Please provide both current password and new password",
       });
     }
+
+    // Validate email format
     if (!emailValidation(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
+
+    // Validate password
     if (currentPassword && newPassword) {
       if (!passwordMatching(currentPassword, user.password))
         return res.status(400).json({ error: "Current password is incorrect" });
@@ -196,6 +241,7 @@ const updateUserProfile = async (req: CustomRequest, res: Response) => {
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
+    // Update user details
     user.name = name || user?.name;
     user.email = email || user?.email;
     user.username = username || user?.username;
@@ -203,17 +249,6 @@ const updateUserProfile = async (req: CustomRequest, res: Response) => {
     user.link = link || user?.link;
 
     user = await user.save();
-
-    // Find all posts that this user replied and update username
-    await Post.updateMany(
-      { "comments.user": userId },
-      {
-        $set: {
-          "comments.$[comment].username": user.username,
-        },
-      },
-      { arrayFilters: [{ "comment.user": userId }] }
-    );
 
     return res.status(200).json({
       _id: user?._id,
@@ -231,12 +266,15 @@ const updateUserProfile = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Update user Profile/Cover img
- * @body User profile/cover img details
- * @param req Request object containing user id
- * @param res Response object
+ * Updates a user's profile or cover image.
+ * @param req - Custom request object containing the image details.
+ * @param res - Response object with updated user data or an error message.
+ * @returns - Updated user images or error response.
  */
-const updateUserImg = async (req: CustomRequest, res: Response) => {
+const updateUserImg = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   let { profileImg, coverImg }: { profileImg: string; coverImg: string } =
     req?.body;
   const userId = req?.user?._id;
@@ -245,7 +283,8 @@ const updateUserImg = async (req: CustomRequest, res: Response) => {
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
-    //Upload Img to imageKit
+
+    // Upload images using ImageKit
     if (profileImg) {
       if (user?.profileImg) {
         if (user?.profileImgFileId) {
@@ -260,6 +299,7 @@ const updateUserImg = async (req: CustomRequest, res: Response) => {
       profileImg = uploadedResponse?.url;
       user.profileImgFileId = uploadedResponse.fileId;
     }
+
     if (coverImg) {
       if (user?.coverImgFileId) {
         await imageKit.deleteFile(user.coverImgFileId);
@@ -277,15 +317,7 @@ const updateUserImg = async (req: CustomRequest, res: Response) => {
     user.coverImg = coverImg || user?.coverImg;
 
     user = await user.save();
-    await Post.updateMany(
-      { "comments.user": userId },
-      {
-        $set: {
-          "comments.$[comment].userprofileImg": user.profileImg,
-        },
-      },
-      { arrayFilters: [{ "comment.user": userId }] }
-    );
+
     return res.status(200).json({
       _id: user?._id,
       name: user?.name,

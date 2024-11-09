@@ -5,18 +5,12 @@ import { User } from "../../shared/interface/User";
 import { LoginDataProps } from "../../shared/interface/AuthData";
 
 /**
- * Custom hook for managing user login.
- * @returns{
- * - A mutation function for user login.
- * - The pending state while user login.
- * - The error state while user login
- * }
+ * Custom hook for handling user login.
  */
 
 const loginUserApi = () => {
   const queryClient = useQueryClient();
 
-  // Mutation for user login
   const {
     mutate: loginMutation,
     isPending,
@@ -36,6 +30,7 @@ const loginUserApi = () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
+  
   return { loginMutation, isPending, isError };
 };
 

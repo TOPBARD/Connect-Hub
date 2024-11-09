@@ -9,7 +9,7 @@ import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 
 import { RegisterDataProps } from "../../../shared/interface/AuthData";
-import signupUserApi from "../../../api/auth/SignupUser";
+import signupUserApi from "../../../api/auth/signup.user";
 
 const SignUpPage = () => {
   // Initialize form data state

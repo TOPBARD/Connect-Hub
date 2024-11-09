@@ -2,7 +2,7 @@ import conversationApi from "@/api/chat/Chat";
 import { useSelectConversation } from "@/hooks/useSelectConversation";
 import LoadingSpinner from "@/shared/loading-spinner/LoadingSpinner";
 import { useRef, useState } from "react";
-import { FaImage, FaPlus } from "react-icons/fa";
+import { FaImage, FaPlus, FaSmile } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 
@@ -39,9 +39,9 @@ const MessageInput = () => {
     }
   };
   return (
-    <div className="relative">
+    <div className="relative bg-chat-header">
       {img && (
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-700 bg-opacity-30 flex justify-center items-center rounded-lg overflow-hidden p-2 z-20">
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-700 bg-opacity-30 flex justify-center items-center rounded-lg overflow-hidden p-2 z-20">
           <div
             className="absolute top-2 right-2 cursor-pointer hover:text-red-600"
             onClick={() => {
@@ -60,13 +60,16 @@ const MessageInput = () => {
           />
         </div>
       )}
-      <section className="h-16 flex items-center px-4">
-        <div className="relative ">
+      <section className="h-16 flex items-center px-1">
+        <div className="flex">
+          <button className="flex justify-center items-center w-11 h-11 ml-1 rounded-full text-white hover:text-primary">
+            <FaSmile size={25} />
+          </button>
           <button
             onClick={handleUploadImageOpen}
-            className="flex justify-center items-center w-11 h-11 rounded-full hover:bg-primary hover:text-white"
+            className="flex justify-center items-center w-11 h-11 ml-1 rounded-full text-white hover:text-primary"
           >
-            <FaPlus size={20} />
+            <FaPlus size={25} />
           </button>
 
           {/**video and image */}
@@ -97,14 +100,16 @@ const MessageInput = () => {
 
         {/**input box */}
         <form className="h-full w-full flex gap-2" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Type here message..."
-            className="py-1 px-4 outline-none w-full h-full"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <button className="text-primary hover:text-secondary">
+          <div className="w-full m-2">
+            <input
+              type="text"
+              placeholder="Type here message..."
+              className="py-1 px-7 outline-none w-full h-full rounded-full bg-chat-placeholder"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+          </div>
+          <button className="text-white hover:text-primary mr-1">
             {isPending ? <LoadingSpinner /> : <IoMdSend size={28} />}
           </button>
         </form>

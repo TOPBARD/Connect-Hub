@@ -2,6 +2,10 @@ import axios from "axios";
 import { User } from "../../shared/interface/User";
 import { useQuery } from "@tanstack/react-query";
 
+/**
+ * Custom hook to fetch auth user data.
+ */
+
 const getUserApi = () => {
   const { data: authUser, isLoading } = useQuery<User | null>({
     queryKey: ["authUser"],
@@ -16,6 +20,7 @@ const getUserApi = () => {
     },
     retry: false,
   });
+
   return { authUser, isLoading };
 };
 

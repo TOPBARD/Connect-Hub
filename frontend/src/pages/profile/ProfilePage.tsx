@@ -14,30 +14,27 @@ import { MdEdit } from "react-icons/md";
 import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../shared/functions/DataFormatter";
 import { User } from "../../shared/interface/User";
-import useFollow from "../../hooks/useFollow";
 import { FEEDTYPE } from "../../shared/enums/Feed";
-import profileApi from "../../api/profile/Profile";
+import profileApi from "../../api/profile/profile";
 import { USERIMAGETYPE } from "../../shared/enums/UserImage";
+import profileActionApi from "@/api/profile/profile.action";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState<string | null>(null);
   const [profileImg, setProfileImg] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<FEEDTYPE>(FEEDTYPE.PERSONAL);
+
   const { username } = useParams<string>();
 
   const coverImgRef = useRef<HTMLInputElement | null>(null);
   const profileImgRef = useRef<HTMLInputElement | null>(null);
 
-  const { follow, isPending } = useFollow();
+  const { follow, isPending, updateProfileImage, isUpdatingProfileImage } =
+    profileActionApi();
 
-  const {
-    updateProfileImage,
-    user,
-    isLoading,
-    refetch,
-    isRefetching,
-    isUpdatingProfileImage,
-  } = profileApi(username as string);
+  const { user, isLoading, refetch, isRefetching } = profileApi(
+    username as string
+  );
 
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
@@ -68,9 +65,9 @@ const ProfilePage = () => {
   // Refetch user data whenever the username changes
   useEffect(() => {
     refetch();
-  }, [username , refetch]);
+  }, [username, refetch]);
 
-  const handleUpdate = async(e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateProfileImage({ profileImg, coverImg });
     setCoverImg(null);

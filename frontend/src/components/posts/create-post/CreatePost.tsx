@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "../../../shared/interface/User";
-import postApi from "../../../api/posts/Posts";
+import postApi from "../../../api/posts/posts";
 
 const CreatePost = () => {
   const [text, setText] = useState<string>("");

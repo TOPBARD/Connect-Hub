@@ -6,17 +6,11 @@ import { RegisterDataProps } from "../../shared/interface/AuthData";
 
 /**
  * Custom hook for handling user signup.
- * @returns{
- * - A mutation function for user signup.
- * - The pending state while user signup.
- * - The error state while user signup.
- * }
  */
 
 const signupUserApi = () => {
   const queryClient = useQueryClient();
 
-  // Mutation for user signup
   const {
     mutate: signupMutation,
     isError,
@@ -36,6 +30,7 @@ const signupUserApi = () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
+
   return { signupMutation, isPending, isError };
 };
 

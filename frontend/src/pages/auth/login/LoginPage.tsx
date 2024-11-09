@@ -6,7 +6,7 @@ import XSvg from "../../../components/svgs/svg";
 import { MdOutlineMail } from "react-icons/md";
 import { MdPassword } from "react-icons/md";
 import { LoginDataProps } from "../../../shared/interface/AuthData";
-import loginUserApi from "../../../api/auth/LoginUser";
+import loginUserApi from "../../../api/auth/login.user";
 
 const LoginPage = () => {
   // Initialize form data state

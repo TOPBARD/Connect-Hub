@@ -7,7 +7,9 @@
     --background: 202, 31%, 7%; /* CHANGED */
     --foreground: 210 40% 98%;
 
-    /* CLASSES ADDED BY US: */
+    --chat-header : 202 23% 16%;
+    --chat-placeholder : 203 22% 21%;
+    --green-chat: 169, 100%, 18%;
     --container: 202, 31%, 7%;
 
     --gray-primary: 202, 23%, 16%;
@@ -18,7 +20,6 @@
 
     --green-primary: 167, 100%, 33%;
     --green-secondary: 165, 100%, 39%;
-    --green-chat: 169, 100%, 18%;
 
     --gray-tertiary: 203, 22%, 21%;
     /* CLASSES ADDED BY US */
@@ -52,14 +53,25 @@
 
 /* WE ADDED => DARK MODE THIN SCROLLBAR */
 @layer components {
-  ::-webkit-scrollbar {
-    width: 8px;
+  /* For Webkit browsers (Chrome, Safari) */
+  .scrollbar::-webkit-scrollbar {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: hsl(203, 32%, 10%) #393636; /* Thumb color, track color */
   }
-  ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--gray-primary));
-    border-radius: 4px;
+
+  .scrollbar::-webkit-scrollbar-track {
+    background: #473c3c; /* Track color */
   }
-  ::-webkit-scrollbar-track {
-    background-color: hsl(var(--container));
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1; /* Scrollbar thumb color */
+    border-radius: 10px; /* Roundness of the thumb */
+    border: 2px solid #f0f0f0; /* Padding around thumb */
+  }
+
+  /* For Firefox */
+  .scrollbar {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: hsl(203, 32%, 10%) #393636; /* Thumb color, track color */
   }
 }
