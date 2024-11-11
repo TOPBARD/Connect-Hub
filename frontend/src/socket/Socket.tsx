@@ -41,7 +41,7 @@ export const SocketContextProvider = ({
       };
     }
     return undefined;
-  }, [authUser]);
+  }, [authUser?._id]);
 
   return (
     <SocketContext.Provider value={{ socket, onlineUsers }}>

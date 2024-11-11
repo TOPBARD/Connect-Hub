@@ -8,6 +8,7 @@ const conversationSchema = new mongoose.Schema(
         type: String,
         maxLength: 200,
       },
+      isImg: Boolean,
       sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       seen: {
         type: Boolean,

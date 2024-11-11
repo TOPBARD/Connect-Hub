@@ -3,8 +3,8 @@ import RightPanelSkeleton from "./RightPanelSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { User } from "../../shared/interface/User";
-import useFollow from "../../hooks/useFollow";
 import LoadingSpinner from "../../shared/loading-spinner/LoadingSpinner";
+import profileActionApi from "@/api/profile/profile.action";
 
 const RightPanel = () => {
   const { data: suggestedUsers, isLoading } = useQuery<User[]>({
@@ -18,7 +18,7 @@ const RightPanel = () => {
       }
     },
   });
-  const { follow, isPending } = useFollow();
+  const { follow, isPending } = profileActionApi();
   if (suggestedUsers?.length === 0) return <div className="md:w-64 w-0"></div>;
 
   return (

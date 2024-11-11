@@ -10,7 +10,7 @@ import { User } from "../../../shared/interface/User";
 import { formatPostDate } from "../../../shared/functions/DataFormatter";
 import LoadingSpinner from "../../../shared/loading-spinner/LoadingSpinner";
 import { PostComment, Posts } from "../../../shared/interface/Post";
-import singlePostApi from "../../../api/posts/posts.action";
+import postActionApi from "../../../api/posts/posts.action";
 
 const Post = ({ post }: { post: Posts }) => {
   const { data: authUser } = useQuery<User>({
@@ -30,7 +30,7 @@ const Post = ({ post }: { post: Posts }) => {
     isLiking,
     isCommenting,
     isDeleting,
-  } = singlePostApi(post);
+  } = postActionApi(post);
 
   const handleDeletePost = () => {
     deletePost(post._id);

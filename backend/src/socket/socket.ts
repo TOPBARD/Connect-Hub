@@ -30,11 +30,13 @@ export const getRecipientSocketId = (recipientId: string) => {
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId as string;
   socket.join(userId);
-  userSocketMap[userId] = socket.id;
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+  }
   io.emit("online-users", Object.keys(userSocketMap));
 
   socket.on(
-    "markMessagesAsSeen",
+    "mark-message-as-seen",
     async ({
       conversationId,
       userId,
@@ -51,7 +53,7 @@ io.on("connection", (socket) => {
           { _id: conversationId },
           { $set: { "lastMessage.seen": true } }
         );
-        io.to(userSocketMap[userId]).emit("messagesSeen", { conversationId });
+        io.to(userSocketMap[userId]).emit("messages-seen", { conversationId });
       } catch (error) {
         console.log(error);
       }

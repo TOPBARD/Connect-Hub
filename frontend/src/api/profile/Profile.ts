@@ -6,7 +6,8 @@ import { User } from "../../shared/interface/User";
  * Custom hook to fetch profile data based on type.
  */
 
-const profileApi = (username?: string) => {
+const profileApi = (username: string) => {
+  // Fetch user profile by username
   const {
     data: user,
     isLoading,

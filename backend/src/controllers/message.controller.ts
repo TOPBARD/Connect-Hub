@@ -42,7 +42,8 @@ async function sendMessage(
       conversation = new Conversation({
         participants: [senderId, participantId],
         lastMessage: {
-          text,
+          text: text || "",
+          isImg: img ? true : false,
           sender: senderId,
         },
       });
@@ -68,8 +69,9 @@ async function sendMessage(
     const newMessage = new Message({
       conversationId: conversation?._id,
       sender: senderId,
-      text,
+      text: text || "",
       img: img || "",
+      isImg: img ? true : false,
       imgFileId: uploadedResponse?.fileId,
     });
 
@@ -78,7 +80,8 @@ async function sendMessage(
       newMessage.save(),
       conversation.updateOne({
         lastMessage: {
-          text,
+          text: text || "",
+          isImg: img ? true : false,
           sender: senderId,
         },
       }),
@@ -87,7 +90,7 @@ async function sendMessage(
     // Emit a real-time update to the recipient if their socket is connected
     const recipientSocketId = getRecipientSocketId(participantId);
     if (recipientSocketId) {
-      io.to(recipientSocketId).emit("newMessage", newMessage);
+      io.to(recipientSocketId).emit("new-message", newMessage);
     }
 
     return res.status(201).json(newMessage);
@@ -95,6 +98,43 @@ async function sendMessage(
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+const createMockConversation = async (req: CustomRequest, res: Response) => {
+  const { isMock } = req?.body;
+  const { participantId } = req.params;
+  const senderId = req?.user?._id;
+  try {
+    if (!senderId || !participantId) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    const conversation = await Conversation.findOne({
+      participants: { $all: [senderId, participantId] },
+    });
+    if (conversation) {
+      return res.status(201).json(conversation);
+    }
+    // Create a mock conversation
+    if (isMock) {
+      const mockConversation = new Conversation({
+        participants: [senderId, participantId],
+        lastMessage: {
+          text: "",
+          isImg: false,
+          sender: senderId,
+        },
+      });
+      await mockConversation.save();
+
+      mockConversation.participants = mockConversation.participants.filter(
+        (id) => id.toString() !== senderId.toString()
+      );
+      return res.status(201).json(mockConversation);
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 /**
  * Retrieves messages for a given conversation.
@@ -168,4 +208,4 @@ async function getConversations(
   }
 }
 
-export { sendMessage, getMessages, getConversations };
+export { sendMessage, getMessages, getConversations, createMockConversation };

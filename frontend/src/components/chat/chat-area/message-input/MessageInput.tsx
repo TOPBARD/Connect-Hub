@@ -1,4 +1,4 @@
-import conversationApi from "@/api/chat/Chat";
+import messageActionApi from "@/api/message/message.action";
 import { useSelectConversation } from "@/hooks/useSelectConversation";
 import LoadingSpinner from "@/shared/loading-spinner/LoadingSpinner";
 import { useRef, useState } from "react";
@@ -13,7 +13,7 @@ const MessageInput = () => {
   const imgRef = useRef<HTMLInputElement | null>(null);
 
   const { participantId } = useSelectConversation();
-  const { sendMessageMutation, isPending } = conversationApi(participantId);
+  const { sendMessageMutation, isPending } = messageActionApi(participantId);
 
   const handleUploadImageOpen = () => {
     setOpenImageUpload((preve) => !preve);
@@ -22,7 +22,8 @@ const MessageInput = () => {
   // Handle post creation
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessageMutation({ text, img });
+    const messageData = { text, img };
+    sendMessageMutation(messageData);
     setOpenImageUpload(false);
     setText("");
     setImg("");
@@ -41,7 +42,7 @@ const MessageInput = () => {
   return (
     <div className="relative bg-chat-header">
       {img && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-700 bg-opacity-30 flex justify-center items-center rounded-lg overflow-hidden p-2 z-20">
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-white flex justify-center items-center rounded-lg overflow-hidden p-2 z-20">
           <div
             className="absolute top-2 right-2 cursor-pointer hover:text-red-600"
             onClick={() => {

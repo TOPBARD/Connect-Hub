@@ -21,20 +21,7 @@ const ChatPage = () => {
             !selectedConversationId && "hidden"
           }`}
         >
-          {selectedConversationId ? (
-            <ChatArea />
-          ) : (
-            <div
-              className={`justify-center items-center flex-col gap-2 lg:flex hidden`}
-            >
-              <div>
-                <img src="/verified.png" width={250} alt="logo" />
-              </div>
-              <p className="text-lg mt-2 text-slate-500">
-                Select user to send message
-              </p>
-            </div>
-          )}
+          <ChatArea selectedConversationId={selectedConversationId} />
         </section>
       </div>
     </>

@@ -7,7 +7,7 @@ import { CreatePost, Posts } from "../../shared/interface/Post";
  * Custom hook to handle posts actions.
  */
 
-const postActionApi = (post: Posts) => {
+const postActionApi = (post?: Posts) => {
   const queryClient = useQueryClient();
 
   // Create post
@@ -78,7 +78,7 @@ const postActionApi = (post: Posts) => {
     onSuccess: (updatedLikes: String[]) => {
       queryClient.setQueryData(["posts"], (oldData: Posts[]) => {
         return oldData.map((p) => {
-          if (p._id === post._id) {
+          if (p._id === post?._id) {
             return { ...p, likes: updatedLikes };
           }
           return p;

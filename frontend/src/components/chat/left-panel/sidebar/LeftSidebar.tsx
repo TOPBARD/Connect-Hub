@@ -4,16 +4,16 @@ import LoadingSpinner from "../../../../shared/loading-spinner/LoadingSpinner";
 import { useEffect, useRef, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import UserSearchCard from "../../user-search-card/UserSearchCard";
-import searchApi from "../../../../api/search/SearchUser";
-import conversationApi from "@/api/chat/Chat";
 import Conversation from "../conversation/Conversation";
 import { Conversations } from "@/shared/interface/Chat";
 import RightPanelSkeleton from "../../../../components/right-panel/RightPanelSkeleton";
+import messageApi from "@/api/message/message";
+import searchApi from "@/api/message/search";
 
 const LeftSidebar = () => {
   const [search, setSearch] = useState("");
+  const { conversations, loadingConversation } = messageApi();
   const { searchUser, searchingUser, refetch } = searchApi(search);
-  const { conversations, loadingConversation } = conversationApi();
   const modalRef = useRef<HTMLDialogElement | null>(null);
   useEffect(() => {
     if (search) refetch();

@@ -10,6 +10,7 @@ export interface Conversations {
   lastMessage: {
     text: string;
     sender: string;
+    isImg: Boolean;
     seen: boolean;
   };
   createdAt: Date;
@@ -21,6 +22,7 @@ export interface Message {
   sender: string;
   text: string;
   img: string;
+  isImg: Boolean;
   seen: boolean;
   createdAt: Date;
 }
@@ -37,4 +39,5 @@ export interface MessagesWithParticipantData {
 export interface MessageData {
   text: string;
   img: string;
+  isMock?: boolean;
 }

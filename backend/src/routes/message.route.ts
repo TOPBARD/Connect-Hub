@@ -4,6 +4,7 @@ import {
   getMessages,
   sendMessage,
   getConversations,
+  createMockConversation
 } from "../controllers/message.controller";
 
 const router = express.Router();
@@ -28,5 +29,12 @@ router.get("/:participantId", protectRoute, getMessages);
  * @access Protected
  */
 router.post("/:participantId", protectRoute, sendMessage);
+
+/**
+ * @route POST /mock/:participantId
+ * @description Create a mock converation for specific participant
+ * @access Protected
+ */
+router.post("/mock/:participantId", protectRoute, createMockConversation);
 
 export default router;

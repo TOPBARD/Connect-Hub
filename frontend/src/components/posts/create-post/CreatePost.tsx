@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "../../../shared/interface/User";
-import postApi from "../../../api/posts/posts";
+import postActionApi from "@/api/posts/posts.action";
 
 const CreatePost = () => {
   const [text, setText] = useState<string>("");
@@ -14,7 +14,7 @@ const CreatePost = () => {
   // Fetch authenticated user data
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
-  const { createPost, isError, isPending } = postApi();
+  const { createPost, isError, isPending } = postActionApi();
 
   // Handle post creation
   const handleSubmit = (e: React.FormEvent) => {

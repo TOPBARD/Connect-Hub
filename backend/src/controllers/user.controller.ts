@@ -97,12 +97,19 @@ const getSearchUsers = async (
   res: Response
 ): Promise<Response> => {
   const { username } = req?.params;
+  const userId = req.user?._id;
 
   try {
+    const currentUser = await User.findById(userId).select("following");
+    const followingIds = currentUser?.following || [];
     // Find users based on given username characters. Select (name, username, profileImg) fields
     const searchQuery = new RegExp(username, "i");
     const users = await User.find({
-      $or: [{ name: searchQuery }, { username: searchQuery }],
+      $and: [
+        { _id: { $ne: userId } }, // Exclude the current user
+        { _id: { $in: followingIds } }, // Include only followed users
+        { $or: [{ name: searchQuery }, { username: searchQuery }] },
+      ],
     }).select("name username profileImg");
 
     return res.status(200).json(users);
