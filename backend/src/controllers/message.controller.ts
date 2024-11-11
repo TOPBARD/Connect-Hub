@@ -60,12 +60,9 @@ async function sendMessage(
           folder: "Connect-Hub-Messages",
         });
         img = uploadedResponse.url;
-      } catch (error) {
-        console.error("Image upload failed:", error);
-      }
+      } catch (error) {}
     }
 
-    // Create a new message document
     const newMessage = new Message({
       conversationId: conversation?._id,
       sender: senderId,
@@ -75,7 +72,6 @@ async function sendMessage(
       imgFileId: uploadedResponse?.fileId,
     });
 
-    // Save the new message and update the conversation's last message
     await Promise.all([
       newMessage.save(),
       conversation.updateOne({
@@ -99,7 +95,16 @@ async function sendMessage(
   }
 }
 
-const createMockConversation = async (req: CustomRequest, res: Response) => {
+/**
+ * Create a mock conversation between two participants.
+ * @param req - Express Request object containing the sender's ID, recipient's ID and isMock flag
+ * @param res - Express Response object to send back the response
+ * @returns - A response with the created message or an error message
+ */
+const createMockConversation = async (
+  req: CustomRequest,
+  res: Response
+): Promise<Response> => {
   const { isMock } = req?.body;
   const { participantId } = req.params;
   const senderId = req?.user?._id;
@@ -114,7 +119,9 @@ const createMockConversation = async (req: CustomRequest, res: Response) => {
     if (conversation) {
       return res.status(201).json(conversation);
     }
+
     // Create a mock conversation
+    let mockConversation;
     if (isMock) {
       const mockConversation = new Conversation({
         participants: [senderId, participantId],
@@ -126,11 +133,12 @@ const createMockConversation = async (req: CustomRequest, res: Response) => {
       });
       await mockConversation.save();
 
+      // Remove the current user from the participants list
       mockConversation.participants = mockConversation.participants.filter(
         (id) => id.toString() !== senderId.toString()
       );
-      return res.status(201).json(mockConversation);
     }
+    return res.status(201).json(mockConversation);
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -150,7 +158,6 @@ async function getMessages(
   const userId = req?.user?._id;
 
   try {
-    // Check if the conversation exists between the user and participant
     const conversation = await Conversation.findOne({
       participants: { $all: [userId, participantId] },
     });

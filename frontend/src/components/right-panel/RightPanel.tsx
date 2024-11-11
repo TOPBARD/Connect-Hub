@@ -1,23 +1,14 @@
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "./RightPanelSkeleton";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { User } from "../../shared/interface/User";
 import LoadingSpinner from "../../shared/loading-spinner/LoadingSpinner";
 import profileActionApi from "@/api/profile/profile.action";
+import profileApi from "@/api/profile/profile";
 
 const RightPanel = () => {
-  const { data: suggestedUsers, isLoading } = useQuery<User[]>({
-    queryKey: ["suggestedUsers"],
-    queryFn: async () => {
-      try {
-        const suggestedUserData = await axios.get("/api/users/suggested");
-        return suggestedUserData.data;
-      } catch (error) {
-        throw new Error();
-      }
-    },
-  });
+  // Fetch suggested user data from API.
+  const { suggestedUsers, isSuggesting } = profileApi();
+
+  // Fetch profile action from API.
   const { follow, isPending } = profileActionApi();
   if (suggestedUsers?.length === 0) return <div className="md:w-64 w-0"></div>;
 
@@ -27,7 +18,7 @@ const RightPanel = () => {
         <p className="font-bold">Who to follow</p>
         <div className="flex flex-col gap-4">
           {/* item */}
-          {isLoading && (
+          {isSuggesting && (
             <>
               <RightPanelSkeleton />
               <RightPanelSkeleton />
@@ -35,7 +26,7 @@ const RightPanel = () => {
               <RightPanelSkeleton />
             </>
           )}
-          {!isLoading &&
+          {!isSuggesting &&
             suggestedUsers?.map((user) => (
               <Link
                 to={`/profile/${user.username}`}

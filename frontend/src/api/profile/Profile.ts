@@ -6,8 +6,8 @@ import { User } from "../../shared/interface/User";
  * Custom hook to fetch profile data based on type.
  */
 
-const profileApi = (username: string) => {
-  // Fetch user profile by username
+const profileApi = (username?: string) => {
+  // Fetch profile data with username
   const {
     data: user,
     isLoading,
@@ -26,11 +26,26 @@ const profileApi = (username: string) => {
     enabled: !!username,
   });
 
+  // Fetch suggested user data
+  const { data: suggestedUsers, isLoading: isSuggesting } = useQuery<User[]>({
+    queryKey: ["suggestedUsers"],
+    queryFn: async () => {
+      try {
+        const suggestedUserData = await axios.get("/api/users/suggested");
+        return suggestedUserData.data;
+      } catch (error) {
+        throw new Error();
+      }
+    },
+  });
+
   return {
     user,
     isLoading,
     refetch,
     isRefetching,
+    suggestedUsers,
+    isSuggesting,
   };
 };
 

@@ -8,6 +8,7 @@ import {
   MessagesWithParticipantData,
 } from "@/shared/interface/Chat";
 import { useSelectConversation } from "@/hooks/useSelectConversation";
+
 /**
  * Custom hook to handle message actions.
  */
@@ -16,6 +17,7 @@ const messageActionApi = (participantId: string) => {
   const { handleConversationSelect } = useSelectConversation();
   const queryClient = useQueryClient();
 
+  // Send message (on success update existing messages and conversation).
   const {
     mutate: sendMessageMutation,
     isPending,

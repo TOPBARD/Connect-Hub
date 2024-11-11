@@ -7,14 +7,21 @@ import { IoMdSend } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 
 const MessageInput = () => {
-  const [openImageUpload, setOpenImageUpload] = useState(false);
+  // State management.
+  const [openImageUpload, setOpenImageUpload] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
   const [img, setImg] = useState<string>("");
+
+  // Image reference.
   const imgRef = useRef<HTMLInputElement | null>(null);
 
+  // Conversation custom hook.
   const { participantId } = useSelectConversation();
+
+  // Fetch data and functions from API.
   const { sendMessageMutation, isPending } = messageActionApi(participantId);
 
+  // Toggle image uploader.
   const handleUploadImageOpen = () => {
     setOpenImageUpload((preve) => !preve);
   };
@@ -29,6 +36,7 @@ const MessageInput = () => {
     setImg("");
   };
 
+  // Display currently selected image.
   const handleImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -41,6 +49,7 @@ const MessageInput = () => {
   };
   return (
     <div className="relative bg-chat-header">
+      {/* Image Display */}
       {img && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-white flex justify-center items-center rounded-lg overflow-hidden p-2 z-20">
           <div
@@ -73,7 +82,7 @@ const MessageInput = () => {
             <FaPlus size={25} />
           </button>
 
-          {/**video and image */}
+          {/* Image Uploader */}
           {openImageUpload && (
             <div className="bg-gray-800 shadow rounded absolute bottom-14 w-36 p-2">
               <form onClick={() => imgRef?.current?.click()}>
@@ -99,7 +108,7 @@ const MessageInput = () => {
           )}
         </div>
 
-        {/**input box */}
+        {/* Input Box */}
         <form className="h-full w-full flex gap-2" onSubmit={handleSubmit}>
           <div className="w-full m-2">
             <input

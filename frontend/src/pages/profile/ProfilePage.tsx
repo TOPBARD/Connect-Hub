@@ -20,24 +20,31 @@ import { USERIMAGETYPE } from "../../shared/enums/UserImage";
 import profileActionApi from "@/api/profile/profile.action";
 
 const ProfilePage = () => {
+  // State management
   const [coverImg, setCoverImg] = useState<string | null>(null);
   const [profileImg, setProfileImg] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<FEEDTYPE>(FEEDTYPE.PERSONAL);
 
+  // Fetch username from params
   const { username } = useParams<string>();
 
+  // Image reference
   const coverImgRef = useRef<HTMLInputElement | null>(null);
   const profileImgRef = useRef<HTMLInputElement | null>(null);
 
+  // Fetch profile actions from API.
   const { follow, isPending, updateProfileImage, isUpdatingProfileImage } =
     profileActionApi();
 
+  // Fetch user profile data
   const { user, isLoading, refetch, isRefetching } = profileApi(
     username as string
   );
 
+  // Auth user data
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
+  // Extract profile data
   const isMyProfile = authUser?._id === user?._id;
   const memberSinceDate = formatMemberSinceDate(user?.createdAt as Date);
   const amIFollowing = authUser?.following?.includes(user?._id as string);
@@ -67,6 +74,7 @@ const ProfilePage = () => {
     refetch();
   }, [username, refetch]);
 
+  // Update Image
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateProfileImage({ profileImg, coverImg });

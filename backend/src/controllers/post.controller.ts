@@ -110,9 +110,7 @@ const createPost = async (
           folder: "Connect-Hub",
         });
         img = uploadedResponse.url;
-      } catch (error) {
-        console.error("Image upload failed:", error);
-      }
+      } catch (error) {}
     }
     const newPost = new Post({
       user: userId,

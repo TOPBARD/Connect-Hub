@@ -13,16 +13,22 @@ import { PostComment, Posts } from "../../../shared/interface/Post";
 import postActionApi from "../../../api/posts/posts.action";
 
 const Post = ({ post }: { post: Posts }) => {
+  // State management.
+  const [comment, setComment] = useState("");
+
+  // Auth user data.
   const { data: authUser } = useQuery<User>({
     queryKey: ["authUser"],
   });
-  const [comment, setComment] = useState("");
+
+  // Fetch data from post.
   const postOwner = post.user;
   const postId = post._id;
   const isLiked = post?.likes?.includes(authUser?._id as string);
   const isMyPost = authUser?._id === post?.user?._id;
   const formattedDate = formatPostDate(post.createdAt);
 
+  // Fetch post actions from API.
   const {
     deletePost,
     commentPost,
@@ -32,10 +38,12 @@ const Post = ({ post }: { post: Posts }) => {
     isDeleting,
   } = postActionApi(post);
 
+  // Delete post
   const handleDeletePost = () => {
     deletePost(post._id);
   };
 
+  // Comment post
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (isCommenting) return;
@@ -43,6 +51,7 @@ const Post = ({ post }: { post: Posts }) => {
     setComment("");
   };
 
+  // Like post
   const handleLikePost = () => {
     if (isLiking) return;
     likePost(post._id);

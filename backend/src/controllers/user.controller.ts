@@ -106,8 +106,8 @@ const getSearchUsers = async (
     const searchQuery = new RegExp(username, "i");
     const users = await User.find({
       $and: [
-        { _id: { $ne: userId } }, // Exclude the current user
-        { _id: { $in: followingIds } }, // Include only followed users
+        { _id: { $ne: userId } },
+        { _id: { $in: followingIds } },
         { $or: [{ name: searchQuery }, { username: searchQuery }] },
       ],
     }).select("name username profileImg");
@@ -215,7 +215,6 @@ const updateUserProfile = async (
       return res.status(400).json({ error: "User not found" });
     }
 
-    // Validate missing details
     if (!name || !username || !email) {
       return res.status(400).json({
         error: "Please provide required details",
@@ -248,7 +247,6 @@ const updateUserProfile = async (
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
-    // Update user details
     user.name = name || user?.name;
     user.email = email || user?.email;
     user.username = username || user?.username;

@@ -10,13 +10,19 @@ const Conversation = ({
 }: {
   conversations: Conversations[];
 }) => {
+  // Conversation custom hook.
   const { handleConversationSelect, handleParticipantSelect } =
     useSelectConversation();
+
+  // Custom socket hook.
   const { onlineUsers } = useSocket();
+
+  // Auth user data.
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
   return (
     <div>
+      {/* map all conversations */}
       {conversations &&
         conversations.map((conv: Conversations) => {
           return (
@@ -30,6 +36,7 @@ const Conversation = ({
                 className="flex items-center gap-3 py-3 px-2 border transition-all rounded-full duration-300 border-transparent hover:bg-chat-hover cursor-pointer"
               >
                 <div className="flex-shrink-0">
+                  {/* participant profileImg */}
                   <img
                     src={
                       conv?.participants[0].profileImg ||

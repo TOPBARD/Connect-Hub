@@ -11,7 +11,10 @@ import { BsChatFill } from "react-icons/bs";
 import logoutUserApi from "@/api/auth/logout.user";
 
 const Sidebar = () => {
+  // Fetch logout function from API.
   const { logout } = logoutUserApi();
+
+  // Auth user data.
   const { data: authUser } = useQuery<User | null>({
     queryKey: ["authUser"],
   });
@@ -22,6 +25,7 @@ const Sidebar = () => {
         <Link to="/" className="flex justify-center md:justify-start">
           <XSvg className="px-2 w-12 h-12 rounded-full fill-white hover:bg-stone-900" />
         </Link>
+        {/* Sidebar options */}
         <ul className="flex flex-col gap-3 mt-4">
           <li className="flex justify-center md:justify-start">
             <Link
@@ -78,6 +82,7 @@ const Sidebar = () => {
                 </p>
                 <p className="text-slate-500 text-sm">@{authUser?.username}</p>
               </div>
+              {/* Logout Button */}
               <BiLogOut
                 className="w-5 h-5 cursor-pointer"
                 onClick={(e) => {

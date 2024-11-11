@@ -1,3 +1,4 @@
+// ImageKit configuration.
 import ImageKit from "imagekit";
 import dotenv from "dotenv";
 dotenv.config();

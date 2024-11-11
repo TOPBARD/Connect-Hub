@@ -7,13 +7,17 @@ import { User } from "../../../shared/interface/User";
 import postActionApi from "@/api/posts/posts.action";
 
 const CreatePost = () => {
+  // State management
   const [text, setText] = useState<string>("");
   const [img, setImg] = useState<string | null>(null);
+
+  // Current image reference
   const imgRef = useRef<HTMLInputElement | null>(null);
 
-  // Fetch authenticated user data
+  // Auth user data.
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
 
+  // Fetch post actions from API.
   const { createPost, isError, isPending } = postActionApi();
 
   // Handle post creation

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { User } from "@/shared/interface/User";
+
 /**
- * Custom hook to fetch message data.
+ * Custom hook to search user with (username or name).
  */
 
 const searchApi = (search: string) => {

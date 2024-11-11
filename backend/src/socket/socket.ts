@@ -6,6 +6,7 @@ import cors from "cors";
 import Message from "../models/message.model";
 import Conversation from "../models/conversation.model";
 
+// Socket configuration.
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -35,6 +36,7 @@ io.on("connection", (socket) => {
   }
   io.emit("online-users", Object.keys(userSocketMap));
 
+  // Mark messages as seen event.
   socket.on(
     "mark-message-as-seen",
     async ({
@@ -54,9 +56,7 @@ io.on("connection", (socket) => {
           { $set: { "lastMessage.seen": true } }
         );
         io.to(userSocketMap[userId]).emit("messages-seen", { conversationId });
-      } catch (error) {
-        console.log(error);
-      }
+      } catch (error) {}
     }
   );
   //Socket Connection Off

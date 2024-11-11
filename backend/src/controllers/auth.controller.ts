@@ -47,7 +47,7 @@ const signupUser = async (req: Request, res: Response): Promise<Response> => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      name,
+      name: name.trim().replace(/\s+/g, " "),
       email,
       username,
       password: hashedPassword,

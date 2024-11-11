@@ -3,6 +3,7 @@ import LeftSidebar from "@/components/chat/left-panel/sidebar/LeftSidebar";
 import { useSelectConversation } from "@/hooks/useSelectConversation";
 
 const ChatPage = () => {
+  // Custom conversation hook.
   const { selectedConversationId } = useSelectConversation();
   return (
     <>

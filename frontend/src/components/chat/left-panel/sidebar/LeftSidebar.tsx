@@ -11,17 +11,28 @@ import messageApi from "@/api/message/message";
 import searchApi from "@/api/message/search";
 
 const LeftSidebar = () => {
-  const [search, setSearch] = useState("");
+  // State management.
+  const [search, setSearch] = useState<string>("");
+
+  // Fetch conversation data from API.
   const { conversations, loadingConversation } = messageApi();
+
+  // Fetch search user data from API.
   const { searchUser, searchingUser, refetch } = searchApi(search);
+
+  // Search modal reference.
   const modalRef = useRef<HTMLDialogElement | null>(null);
+
+  // Refetch on search change
   useEffect(() => {
     if (search) refetch();
   }, [search, refetch]);
+
   return (
     <div className="w-full">
       <div className="h-16 flex items-center">
         <h2 className="text-xl font-bold p-4">Message</h2>
+        {/* Search modal display */}
         <button
           onClick={() => {
             if (
@@ -42,6 +53,7 @@ const LeftSidebar = () => {
       </div>
       <div className="bg-slate-200 p-[0.5px]"></div>
 
+      {/* Search modal */}
       <dialog ref={modalRef} id="search_user_modal" className="modal">
         <div className="modal-box border rounded-md border-gray-700 shadow-md scrollbar">
           <div className="w-full max-w-lg mx-auto mt-10  ">

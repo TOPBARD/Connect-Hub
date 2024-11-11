@@ -15,8 +15,10 @@ const AllPosts = ({
   username?: string;
   userId?: string;
 }) => {
+  // Extract post endpoint based on given input
   const POST_ENDPOINT = getPostEndpoint(feedType, username, userId);
 
+  // Fetch post data from post API.
   const { posts, isLoading, refetch, isRefetching } = postApi(POST_ENDPOINT);
 
   // Refetch posts when feedType, username, or refetch function changes

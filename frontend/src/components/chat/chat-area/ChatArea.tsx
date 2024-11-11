@@ -21,19 +21,31 @@ const ChatArea = ({
 }: {
   selectedConversationId: string;
 }) => {
+  const queryClient = useQueryClient();
+
+  // Conversation custom hook.
   const { participantId, handleConversationSelect, handleParticipantSelect } =
     useSelectConversation();
+
+  // Fetch message data from API.
   const { messages, refetch, loadingMessages, isRefetching } =
     messageApi(participantId);
 
+  // Custom Socket hook.
   const { onlineUsers, socket } = useSocket();
+
+  // Auth user data.
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
+
+  // Current message reference.
+  const currentMessage = useRef<HTMLInputElement | null>(null);
+
+  // Extract details from message data.
   const participant = messages?.participant;
   const allMessages = messages?.messages;
   const isOnline = onlineUsers.includes(participant?._id as string);
 
-  const currentMessage = useRef<HTMLInputElement | null>(null);
-  const queryClient = useQueryClient();
+  // Update current message feed and last message of conversation on new-message
   useEffect(() => {
     if (socket) {
       socket.on("new-message", (message: Message) => {
@@ -75,6 +87,7 @@ const ChatArea = ({
     }
   }, [socket, selectedConversationId]);
 
+  // Mark message as seen on opening conversation
   useEffect(() => {
     const lastMessageIsFromOtherUser =
       allMessages &&
@@ -134,6 +147,7 @@ const ChatArea = ({
     };
   }, [socket, authUser?._id, messages, selectedConversationId]);
 
+  // Scroll to bottom on opening a conversation.
   useEffect(() => {
     if (currentMessage.current) {
       currentMessage.current.scrollIntoView({
@@ -143,11 +157,13 @@ const ChatArea = ({
     }
   }, [allMessages]);
 
+  // Refetch messages on conversation change.
   useEffect(() => {
     refetch();
   }, [selectedConversationId, refetch]);
   return (
     <>
+    {/* Show select user message */}
       {!selectedConversationId ? (
         <div
           className={`justify-center items-center flex-col gap-2 lg:flex hidden`}
@@ -162,6 +178,7 @@ const ChatArea = ({
       ) : (
         <div className="flex flex-col h-full w-full">
           <header className="sticky top-0 h-16  flex justify-between items-center px-1 z-10 bg-chat-header">
+            {/* Back icon */}
             {loadingMessages || isRefetching ? (
               <RightPanelSkeleton />
             ) : (
@@ -174,6 +191,7 @@ const ChatArea = ({
                 >
                   <FaAngleLeft size={25} />
                 </button>
+                {/* Header image */}
                 <div>
                   <img
                     width={50}
@@ -186,6 +204,7 @@ const ChatArea = ({
                   <h3 className="font-semibold text-lg my-0 text-ellipsis line-clamp-1">
                     {participant?.username}
                   </h3>
+                  {/* Online/Offline status */}
                   <p className="-my-2 text-xs">
                     {isOnline ? (
                       <span className=" text-green-500">online</span>
@@ -258,6 +277,7 @@ const ChatArea = ({
                             isSentByAuthUser && "flex-row-reverse"
                           } gap-1`}
                         >
+                          {/* message seen mark */}
                           {isSentByAuthUser && (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"

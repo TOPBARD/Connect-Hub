@@ -5,6 +5,7 @@ import { UpdateProfileProps } from "../../shared/interface/UpdateProfile";
 import profileActionApi from "@/api/profile/profile.action";
 
 const EditProfileModal = ({ authUser }: { authUser: User }) => {
+  // From for profile data
   const [formData, setFormData] = useState<UpdateProfileProps>({
     name: "",
     username: "",
@@ -15,8 +16,10 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
     currentPassword: "",
   });
 
+  // Fetch update profile action from API.
   const { updateProfileDetails, isUpdatingProfileDetails } = profileActionApi();
 
+  // Handle Form input changes
   const handleInputChange = (
     e:
       | React.ChangeEvent<HTMLInputElement>
@@ -25,6 +28,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Pre-fill auth user data
   useEffect(() => {
     if (authUser) {
       setFormData({
@@ -39,6 +43,7 @@ const EditProfileModal = ({ authUser }: { authUser: User }) => {
     }
   }, [authUser]);
 
+  // Profile update
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.username || !formData.email) {

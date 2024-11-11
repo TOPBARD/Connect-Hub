@@ -6,31 +6,41 @@ import { User } from "@/shared/interface/User";
 import { useSocket } from "@/socket/Socket";
 
 const UserSearchCard = ({ user }: { user: User }) => {
+  // Custom socket hook
   const { onlineUsers } = useSocket();
   const isOnline = onlineUsers.includes(user._id);
+
+  // Conversation custom hook.
   const { handleConversationSelect, handleParticipantSelect } =
     useSelectConversation();
+
+  // Fetch conversation data from API.
   const { conversations } = messageApi();
+
+  // Fetch mock conversation action.
   const { createMockMutation } = messageActionApi(user._id);
+
+  // Handle mock conversation
   const handleMockConversation = () => {
     const existingConversation = conversations?.find(
       (conversation: Conversations) =>
         conversation.participants[0]._id === user._id
     );
-    console.log(existingConversation);
     if (existingConversation) {
       handleConversationSelect(existingConversation._id);
       handleParticipantSelect(user._id);
     } else {
       createMockMutation(true);
-      handleParticipantSelect(user?._id)
+      handleParticipantSelect(user?._id);
     }
   };
+
   return (
     <button
       onClick={handleMockConversation}
       className="flex items-center w-full h-full gap-3 p-2 lg:p-4 border border-transparent hover:border hover:border-primary rounded cursor-pointer"
     >
+      {/* Display Search user */}
       <div className="avatar">
         <div className="w-8 rounded-full">
           <img src={user?.profileImg || "/avatar-placeholder.png"} />
