@@ -4,8 +4,6 @@ import bcrypt from "bcryptjs";
 import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
 import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
 import { CustomRequest } from "../shared/interface/CustomRequest";
-import { addDefaultFollowers } from "../shared/helper/addDefaultFollowers";
-import { emailValidation } from "../shared/helper/validation";
 
 /**
  * Handle user signup.
@@ -22,7 +20,9 @@ const signupUser = async (req: Request, res: Response): Promise<Response> => {
     }
 
     // Validate email format
-    if (!emailValidation(email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmailValid = emailRegex.test(email);
+    if (!isEmailValid) {
       return res.status(400).json({ error: "Invalid email format" });
     }
 
@@ -53,8 +53,6 @@ const signupUser = async (req: Request, res: Response): Promise<Response> => {
       password: hashedPassword,
     });
 
-    // Save the new user and add default followers
-    addDefaultFollowers(newUser._id.toString());
     await newUser.save();
 
     return res.status(201).json({

@@ -7,7 +7,6 @@ import { UpdateUserProps, Users } from "../shared/interface/User";
 import Notification from "../models/notification.model";
 import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 import { imageKit } from "../imageKit/ImageKitConfig";
-import { emailValidation } from "../shared/helper/validation";
 
 /**
  * Fetches a user profile by the given username.
@@ -229,7 +228,9 @@ const updateUserProfile = async (
     }
 
     // Validate email format
-    if (!emailValidation(email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmailValid = emailRegex.test(email);
+    if (!isEmailValid) {
       return res.status(400).json({ error: "Invalid email format" });
     }
 
