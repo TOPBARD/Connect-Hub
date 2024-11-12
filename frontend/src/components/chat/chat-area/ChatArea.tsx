@@ -75,6 +75,7 @@ const ChatArea = ({
         socket.off("new-message");
       };
     }
+    return;
   }, [socket, selectedConversation._id]);
 
   // Mark message as seen on opening conversation
