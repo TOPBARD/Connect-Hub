@@ -3,6 +3,7 @@ import RightPanelSkeleton from "./RightPanelSkeleton";
 import LoadingSpinner from "../../shared/loading-spinner/LoadingSpinner";
 import profileActionApi from "../../api/profile/profile.action";
 import profileApi from "../../api/profile/profile";
+import { User } from "../../shared/interface/User";
 
 const RightPanel = () => {
   // Fetch suggested user data from API.
@@ -27,7 +28,7 @@ const RightPanel = () => {
             </>
           )}
           {!isSuggesting &&
-            suggestedUsers?.map((user) => (
+            suggestedUsers?.map((user: User) => (
               <Link
                 to={`/profile/${user?.username}`}
                 className="flex items-center justify-between gap-4"
