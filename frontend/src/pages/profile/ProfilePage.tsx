@@ -13,9 +13,9 @@ import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../shared/functions/DataFormatter";
 import { User } from "../../shared/interface/User";
 import { FEEDTYPE } from "../../shared/enums/Feed";
-import profileApi from "../../api/profile/profile";
+import profileApi from "../../api/user-profile/profile";
 import { USERIMAGETYPE } from "../../shared/enums/UserImage";
-import profileActionApi from "../../api/profile/profile.action";
+import profileActionApi from "../../api/user-profile/profile.action";
 
 const ProfilePage = () => {
   // State management

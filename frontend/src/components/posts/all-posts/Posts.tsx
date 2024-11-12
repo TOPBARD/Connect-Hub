@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { FEEDTYPE } from "../../../shared/enums/Feed";
 import { getPostEndpoint } from "../../../shared/functions/PostEndpoints";
 import { Posts } from "../../../shared/interface/Post";
-import postApi from "../../../api/posts/posts";
+import postApi from "../../../api/posts/post";
 
 const AllPosts = ({
   feedType,

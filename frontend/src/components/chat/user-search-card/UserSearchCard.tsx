@@ -1,5 +1,5 @@
-import messageApi from "../../../api/message/message";
-import messageActionApi from "../../../api/message/message.action";
+import messageApi from "../../../api/messages/message";
+import messageActionApi from "../../../api/messages/message.action";
 import { useSelectConversation } from "../../../hooks/useSelectConversation";
 import { Conversations } from "../../../shared/interface/Chat";
 import { User } from "../../../shared/interface/User";

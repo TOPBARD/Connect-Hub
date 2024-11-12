@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "./RightPanelSkeleton";
 import LoadingSpinner from "../../shared/loading-spinner/LoadingSpinner";
-import profileActionApi from "../../api/profile/profile.action";
-import profileApi from "../../api/profile/profile";
+import profileActionApi from "../../api/user-profile/profile.action";
+import profileApi from "../../api/user-profile/profile";
 import { User } from "../../shared/interface/User";
 
 const RightPanel = () => {

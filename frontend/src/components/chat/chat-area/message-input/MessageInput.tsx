@@ -1,4 +1,4 @@
-import messageActionApi from "../../../../api/message/message.action";
+import messageActionApi from "../../../../api/messages/message.action";
 import { useSelectConversation } from "../../../../hooks/useSelectConversation";
 import LoadingSpinner from "../../../../shared/loading-spinner/LoadingSpinner";
 import { useRef, useState } from "react";

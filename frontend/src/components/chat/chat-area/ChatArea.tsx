@@ -9,7 +9,7 @@ import MessageInput from "./message-input/MessageInput";
 import { useSelectConversation } from "../../../hooks/useSelectConversation";
 import LoadingSpinner from "../../../shared/loading-spinner/LoadingSpinner";
 import RightPanelSkeleton from "../../../components/right-panel/RightPanelSkeleton";
-import messageApi from "../../../api/message/message";
+import messageApi from "../../../api/messages/message";
 import { Conversations, Message } from "../../../shared/interface/Chat";
 
 const ChatArea = ({

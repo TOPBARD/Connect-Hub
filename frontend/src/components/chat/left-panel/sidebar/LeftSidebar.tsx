@@ -7,8 +7,8 @@ import UserSearchCard from "../../user-search-card/UserSearchCard";
 import Conversation from "../conversation/Conversation";
 import { Conversations } from "../../../../shared/interface/Chat";
 import RightPanelSkeleton from "../../../../components/right-panel/RightPanelSkeleton";
-import messageApi from "../../../../api/message/message";
-import searchApi from "../../../../api/message/search";
+import messageApi from "../../../../api/messages/message";
+import searchApi from "../../../../api/messages/search";
 
 const LeftSidebar = () => {
   // State management.

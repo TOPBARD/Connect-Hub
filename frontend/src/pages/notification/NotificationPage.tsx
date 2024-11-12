@@ -5,8 +5,8 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import { NOTIFICATIONACTION } from "../../shared/enums/NotificationAction";
-import notificationApi from "../../api/notification/notification";
-import notificationActionApi from "../../api/notification/notification.action";
+import notificationApi from "../../api/notifications/notification";
+import notificationActionApi from "../../api/notifications/notification.action";
 
 const NotificationPage = () => {
   // Notification APIs
