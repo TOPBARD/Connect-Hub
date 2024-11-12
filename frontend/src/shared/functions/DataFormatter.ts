@@ -151,6 +151,7 @@ export const getRelativeDateTime = (
       return messageDate.toLocaleDateString(undefined, options);
     }
   }
+  return "";
 };
 
 export function randomID(len: number) {
