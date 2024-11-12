@@ -6,7 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { io, Socket } from "socket.io-client";
-import getUserApi from "@/api/auth/auth.user";
+import getUserApi from "../api/auth/auth.user";
 
 interface SocketContextType {
   socket: Socket | null;

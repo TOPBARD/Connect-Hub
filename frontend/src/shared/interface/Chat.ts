@@ -27,15 +27,6 @@ export interface Message {
   createdAt: Date;
 }
 
-export interface MessagesWithParticipantData {
-  participant: {
-    _id: string;
-    username: string;
-    profileImg: string;
-  };
-  messages: Message[];
-}
-
 export interface MessageData {
   text: string;
   img: string;

@@ -1,9 +1,9 @@
-import messageApi from "@/api/message/message";
-import messageActionApi from "@/api/message/message.action";
-import { useSelectConversation } from "@/hooks/useSelectConversation";
-import { Conversations } from "@/shared/interface/Chat";
-import { User } from "@/shared/interface/User";
-import { useSocket } from "@/socket/Socket";
+import messageApi from "../../../api/message/message";
+import messageActionApi from "../../../api/message/message.action";
+import { useSelectConversation } from "../../../hooks/useSelectConversation";
+import { Conversations } from "../../../shared/interface/Chat";
+import { User } from "../../../shared/interface/User";
+import { useSocket } from "../../../socket/Socket";
 
 const UserSearchCard = ({ user }: { user: User }) => {
   // Custom socket hook
@@ -11,8 +11,7 @@ const UserSearchCard = ({ user }: { user: User }) => {
   const isOnline = onlineUsers.includes(user._id);
 
   // Conversation custom hook.
-  const { handleConversationSelect, handleParticipantSelect } =
-    useSelectConversation();
+  const { handleConversationSelect } = useSelectConversation();
 
   // Fetch conversation data from API.
   const { conversations } = messageApi();
@@ -27,11 +26,9 @@ const UserSearchCard = ({ user }: { user: User }) => {
         conversation.participants[0]._id === user._id
     );
     if (existingConversation) {
-      handleConversationSelect(existingConversation._id);
-      handleParticipantSelect(user._id);
+      handleConversationSelect(existingConversation);
     } else {
       createMockMutation(true);
-      handleParticipantSelect(user?._id);
     }
   };
 

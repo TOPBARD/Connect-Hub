@@ -4,7 +4,6 @@ import { Response } from "express";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { imageKit } from "../imageKit/ImageKitConfig";
 import { getRecipientSocketId, io } from "../socket/socket";
-import User from "../models/user.model";
 
 /**
  * Sends a message between two participants.
@@ -166,16 +165,11 @@ async function getMessages(
       return res.status(404).json({ error: "Conversation not found" });
     }
 
-    // Retrieve participant details (username and profile image)
-    const participant = await User.findById(participantId).select(
-      "username profileImg"
-    );
-
     const messages = await Message.find({
       conversationId: conversation?._id,
     }).sort({ createdAt: 1 });
 
-    return res.status(200).json({ participant, messages });
+    return res.status(200).json( messages );
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }

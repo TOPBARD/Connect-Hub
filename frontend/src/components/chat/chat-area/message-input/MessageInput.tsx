@@ -1,6 +1,6 @@
-import messageActionApi from "@/api/message/message.action";
-import { useSelectConversation } from "@/hooks/useSelectConversation";
-import LoadingSpinner from "@/shared/loading-spinner/LoadingSpinner";
+import messageActionApi from "../../../../api/message/message.action";
+import { useSelectConversation } from "../../../../hooks/useSelectConversation";
+import LoadingSpinner from "../../../../shared/loading-spinner/LoadingSpinner";
 import { useRef, useState } from "react";
 import { FaImage, FaPlus, FaSmile } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
@@ -16,10 +16,12 @@ const MessageInput = () => {
   const imgRef = useRef<HTMLInputElement | null>(null);
 
   // Conversation custom hook.
-  const { participantId } = useSelectConversation();
+  const { selectedConversation } = useSelectConversation();
 
   // Fetch data and functions from API.
-  const { sendMessageMutation, isPending } = messageActionApi(participantId);
+  const { sendMessageMutation, isPending } = messageActionApi(
+    selectedConversation?.participants[0]._id as string
+  );
 
   // Toggle image uploader.
   const handleUploadImageOpen = () => {

@@ -5,7 +5,7 @@ import { LoginProps, SignupProps } from "../shared/interface/AuthProps";
 import generateTokenAndSetCookie from "../shared/helper/generateTokenAndSetCookie";
 import { CustomRequest } from "../shared/interface/CustomRequest";
 import { addDefaultFollowers } from "../shared/helper/addDefaultFollowers";
-import { emailValidation, passwordMatching } from "../shared/helper/validation";
+import { emailValidation } from "../shared/helper/validation";
 
 /**
  * Handle user signup.
@@ -87,14 +87,14 @@ const loginUser = async (req: Request, res: Response): Promise<Response> => {
     }
 
     const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).json({ error: "Invalid username or password" });
-    }
 
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user?.password || ""
+    );
     // Verify the password
-    if (!passwordMatching(password, user.password)) {
+    if (!user || !isPasswordCorrect)
       return res.status(400).json({ error: "Invalid username or password" });
-    }
 
     // Generate JWT token and set it as a cookie
     generateTokenAndSetCookie(user.id, res);

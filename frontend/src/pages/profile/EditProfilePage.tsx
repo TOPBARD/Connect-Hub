@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { User } from "../../shared/interface/User";
 import toast from "react-hot-toast";
 import { UpdateProfileProps } from "../../shared/interface/UpdateProfile";
-import profileActionApi from "@/api/profile/profile.action";
+import profileActionApi from "../../api/profile/profile.action";
 
 const EditProfileModal = ({ authUser }: { authUser: User }) => {
   // From for profile data

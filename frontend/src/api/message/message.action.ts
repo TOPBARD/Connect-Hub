@@ -1,13 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import axios from "axios";
-import {
-  Conversations,
-  Message,
-  MessageData,
-  MessagesWithParticipantData,
-} from "@/shared/interface/Chat";
-import { useSelectConversation } from "@/hooks/useSelectConversation";
+import { Conversations, Message, MessageData } from "../../shared/interface/Chat";
+import { useSelectConversation } from "../../hooks/useSelectConversation";
 
 /**
  * Custom hook to handle message actions.
@@ -37,27 +32,22 @@ const messageActionApi = (participantId: string) => {
       }
     },
     onSuccess: (newMessage: Message) => {
-      queryClient.setQueryData<MessagesWithParticipantData | null>(
-        ["messages"],
-        (oldData) => {
-          if (!oldData) return null;
-          if (
-            newMessage.conversationId !== oldData.messages[0].conversationId
-          ) {
-            return oldData; // Return the existing data unchanged
-          }
-          return {
-            ...oldData,
-            messages: [...oldData.messages, newMessage],
-          };
+      queryClient.setQueryData<Message[] | null>(["messages"], (oldData) => {
+        if (!oldData || oldData.length === 0) {
+          return [newMessage];
         }
-      );
+        if (newMessage.conversationId !== oldData[0]?.conversationId) {
+          return oldData; // Return the existing data unchanged
+        }
+        return [...oldData, newMessage];
+      });
+
       queryClient.setQueryData<Conversations[] | null>(
         ["conversations"],
         (oldConversations) => {
           if (!oldConversations) return null;
           return oldConversations.map((conversation) => {
-            if (conversation.participants[0]._id === participantId) {
+            if (conversation.participants[0]?._id === participantId) {
               return {
                 ...conversation,
                 lastMessage: newMessage, // Update the last message
@@ -70,6 +60,7 @@ const messageActionApi = (participantId: string) => {
     },
   });
 
+  // Create mock conversation for new user
   const { mutate: createMockMutation } = useMutation({
     mutationFn: async (isMock: boolean) => {
       try {
@@ -85,8 +76,8 @@ const messageActionApi = (participantId: string) => {
       }
     },
     onSuccess: (newConversation: Conversations) => {
+      handleConversationSelect(newConversation);
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      handleConversationSelect(newConversation._id);
     },
   });
 

@@ -27,6 +27,12 @@ const SignUpPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     signupMutation(formData);
+    setFormData({
+      email: "",
+      username: "",
+      name: "",
+      password: "",
+    });
   };
 
   // Update form data on input change

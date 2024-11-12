@@ -1,8 +1,8 @@
 import { FaImage } from "react-icons/fa";
 import { Conversations } from "../../../../shared/interface/Chat";
 import { useSelectConversation } from "../../../../hooks/useSelectConversation";
-import { useSocket } from "@/socket/Socket";
-import { User } from "@/shared/interface/User";
+import { useSocket } from "../../../../socket/Socket";
+import { User } from "../../../../shared/interface/User";
 import { useQuery } from "@tanstack/react-query";
 
 const Conversation = ({
@@ -11,8 +11,7 @@ const Conversation = ({
   conversations: Conversations[];
 }) => {
   // Conversation custom hook.
-  const { handleConversationSelect, handleParticipantSelect } =
-    useSelectConversation();
+  const { handleConversationSelect } = useSelectConversation();
 
   // Custom socket hook.
   const { onlineUsers } = useSocket();
@@ -29,8 +28,7 @@ const Conversation = ({
             <div className="border-b border-gray-700" key={conv._id}>
               <div
                 onClick={() => {
-                  handleConversationSelect(conv._id),
-                    handleParticipantSelect(conv.participants[0]._id);
+                  handleConversationSelect(conv);
                 }}
                 key={conv?._id}
                 className="flex items-center gap-3 py-3 px-2 border transition-all rounded-full duration-300 border-transparent hover:bg-chat-hover cursor-pointer"

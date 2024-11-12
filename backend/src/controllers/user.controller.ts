@@ -7,7 +7,7 @@ import { UpdateUserProps, Users } from "../shared/interface/User";
 import Notification from "../models/notification.model";
 import { NOTIFICATIONACTION } from "../shared/enum/notificationAction";
 import { imageKit } from "../imageKit/ImageKitConfig";
-import { emailValidation, passwordMatching } from "../shared/helper/validation";
+import { emailValidation } from "../shared/helper/validation";
 
 /**
  * Fetches a user profile by the given username.
@@ -235,8 +235,13 @@ const updateUserProfile = async (
 
     // Validate password
     if (currentPassword && newPassword) {
-      if (!passwordMatching(currentPassword, user.password))
+      const isPasswordCorrect = await bcrypt.compare(
+        currentPassword,
+        user?.password || ""
+      );
+      if (!isPasswordCorrect) {
         return res.status(400).json({ error: "Current password is incorrect" });
+      }
       if (newPassword.length < 8) {
         return res
           .status(400)

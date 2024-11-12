@@ -1,38 +1,38 @@
 import { HiDotsVertical } from "react-icons/hi";
-import { useSocket } from "@/socket/Socket";
+import { useSocket } from "../../../socket/Socket";
 import { FaAngleLeft } from "react-icons/fa";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { User } from "@/shared/interface/User";
+import { User } from "../../../shared/interface/User";
 import moment from "moment";
 import { useEffect, useRef } from "react";
 import MessageInput from "./message-input/MessageInput";
-import { useSelectConversation } from "@/hooks/useSelectConversation";
-import LoadingSpinner from "@/shared/loading-spinner/LoadingSpinner";
-import RightPanelSkeleton from "@/components/right-panel/RightPanelSkeleton";
-import messageApi from "@/api/message/message";
-import {
-  Conversations,
-  Message,
-  MessagesWithParticipantData,
-} from "@/shared/interface/Chat";
+import { useSelectConversation } from "../../../hooks/useSelectConversation";
+import LoadingSpinner from "../../../shared/loading-spinner/LoadingSpinner";
+import RightPanelSkeleton from "../../../components/right-panel/RightPanelSkeleton";
+import messageApi from "../../../api/message/message";
+import { Conversations, Message } from "../../../shared/interface/Chat";
 
 const ChatArea = ({
-  selectedConversationId,
+  selectedConversation,
 }: {
-  selectedConversationId: string;
+  selectedConversation: Conversations;
 }) => {
   const queryClient = useQueryClient();
 
   // Conversation custom hook.
-  const { participantId, handleConversationSelect, handleParticipantSelect } =
-    useSelectConversation();
-
-  // Fetch message data from API.
-  const { messages, refetch, loadingMessages, isRefetching } =
-    messageApi(participantId);
+  const { handleConversationSelect } = useSelectConversation();
 
   // Custom Socket hook.
   const { onlineUsers, socket } = useSocket();
+
+  // Extract details from message data.
+  const participant = selectedConversation.participants[0];
+  const isOnline = onlineUsers.includes(participant?._id as string);
+
+  // Fetch message data from API.
+  const { messages, refetch, loadingMessages, isRefetching } = messageApi(
+    participant._id
+  );
 
   // Auth user data.
   const { data: authUser } = useQuery<User>({ queryKey: ["authUser"] });
@@ -40,29 +40,19 @@ const ChatArea = ({
   // Current message reference.
   const currentMessage = useRef<HTMLInputElement | null>(null);
 
-  // Extract details from message data.
-  const participant = messages?.participant;
-  const allMessages = messages?.messages;
-  const isOnline = onlineUsers.includes(participant?._id as string);
-
   // Update current message feed and last message of conversation on new-message
   useEffect(() => {
     if (socket) {
       socket.on("new-message", (message: Message) => {
-        queryClient.setQueryData<MessagesWithParticipantData | null>(
-          ["messages"],
-          (oldData) => {
-            if (!oldData) {
-              return null;
-            }
-            if (message.conversationId !== oldData.messages[0].conversationId)
-              return oldData;
-            return {
-              ...oldData,
-              messages: [...oldData.messages, message],
-            };
+        queryClient.setQueryData<Message[] | null>(["messages"], (oldData) => {
+          if (!oldData || oldData.length === 0) {
+            return [message];
           }
-        );
+          if (message.conversationId !== oldData[0]?.conversationId) {
+            return oldData;
+          }
+          return [...oldData, message];
+        });
         queryClient.setQueryData<Conversations[] | null>(
           ["conversations"],
           (oldConversations) => {
@@ -85,41 +75,39 @@ const ChatArea = ({
         socket.off("new-message");
       };
     }
-  }, [socket, selectedConversationId]);
+  }, [socket, selectedConversation._id]);
 
   // Mark message as seen on opening conversation
   useEffect(() => {
     const lastMessageIsFromOtherUser =
-      allMessages &&
-      allMessages[allMessages.length - 1].sender !== authUser?._id;
+      messages &&
+      messages.length > 0 &&
+      messages[messages.length - 1].sender !== authUser?._id;
     if (lastMessageIsFromOtherUser) {
       socket?.emit("mark-message-as-seen", {
-        conversationId: selectedConversationId,
-        userId: allMessages[0].sender,
+        conversationId: selectedConversation._id,
+        userId: messages[0].sender,
       });
     }
 
     socket?.on("messages-seen", ({ conversationId }) => {
-      if (selectedConversationId === conversationId) {
-        queryClient.setQueryData<MessagesWithParticipantData | null>(
-          ["messages"],
-          (prev) => {
-            if (!prev) return null;
-            if (conversationId !== prev.messages[0].conversationId) {
-              return prev;
-            }
-            const updatedMessages = prev.messages.map((message) => {
-              if (!message.seen) {
-                return {
-                  ...message,
-                  seen: true,
-                };
-              }
-              return message;
-            });
-            return { ...prev, messages: updatedMessages };
+      if (selectedConversation._id === conversationId) {
+        queryClient.setQueryData<Message[] | null>(["messages"], (oldData) => {
+          if (!oldData) return [];
+          if (conversationId !== oldData[0].conversationId) {
+            return oldData;
           }
-        );
+          const updatedMessages = oldData.map((message) => {
+            if (!message.seen) {
+              return {
+                ...message,
+                seen: true,
+              };
+            }
+            return message;
+          });
+          return updatedMessages;
+        });
         queryClient.setQueryData<Conversations[] | null>(
           ["conversations"],
           (prevConversations) => {
@@ -145,7 +133,7 @@ const ChatArea = ({
     return () => {
       socket?.off("messages-seen");
     };
-  }, [socket, authUser?._id, messages, selectedConversationId]);
+  }, [socket, authUser?._id, messages, selectedConversation._id]);
 
   // Scroll to bottom on opening a conversation.
   useEffect(() => {
@@ -155,16 +143,16 @@ const ChatArea = ({
         block: "end",
       });
     }
-  }, [allMessages]);
+  }, [messages]);
 
   // Refetch messages on conversation change.
   useEffect(() => {
     refetch();
-  }, [selectedConversationId, refetch]);
+  }, [selectedConversation._id, refetch]);
   return (
     <>
-    {/* Show select user message */}
-      {!selectedConversationId ? (
+      {/* Show select user message */}
+      {!selectedConversation._id ? (
         <div
           className={`justify-center items-center flex-col gap-2 lg:flex hidden`}
         >
@@ -185,7 +173,7 @@ const ChatArea = ({
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
-                    handleConversationSelect(""), handleParticipantSelect("");
+                    handleConversationSelect(null);
                   }}
                   className="lg:hidden"
                 >
@@ -234,8 +222,9 @@ const ChatArea = ({
                   <LoadingSpinner size="xl" />
                 </div>
               ) : (
-                allMessages &&
-                allMessages.map((msg) => {
+                messages &&
+                messages.length > 0 &&
+                messages.map((msg) => {
                   const isSentByAuthUser = msg.sender === authUser?._id;
                   return (
                     <div

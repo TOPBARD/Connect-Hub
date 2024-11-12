@@ -5,8 +5,6 @@ import AllPosts from "../../components/posts/all-posts/Posts";
 import ProfileHeaderSkeleton from "./ProfileSkeleton";
 import EditProfileModal from "./EditProfilePage";
 
-import { POSTS } from "../../shared/dummy/dummydata";
-
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
@@ -17,7 +15,7 @@ import { User } from "../../shared/interface/User";
 import { FEEDTYPE } from "../../shared/enums/Feed";
 import profileApi from "../../api/profile/profile";
 import { USERIMAGETYPE } from "../../shared/enums/UserImage";
-import profileActionApi from "@/api/profile/profile.action";
+import profileActionApi from "../../api/profile/profile.action";
 
 const ProfilePage = () => {
   // State management
@@ -100,9 +98,7 @@ const ProfilePage = () => {
                 </Link>
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{user?.name}</p>
-                  <span className="text-sm text-slate-500">
-                    {POSTS?.length} posts
-                  </span>
+                  <span className="text-sm text-slate-500">Profile</span>
                 </div>
               </div>
               {/* COVER IMG */}

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { User } from "@/shared/interface/User";
+import { User } from "../../shared/interface/User";
 
 /**
  * Custom hook to search user with (username or name).

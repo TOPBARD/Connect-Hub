@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import UserSearchCard from "../../user-search-card/UserSearchCard";
 import Conversation from "../conversation/Conversation";
-import { Conversations } from "@/shared/interface/Chat";
+import { Conversations } from "../../../../shared/interface/Chat";
 import RightPanelSkeleton from "../../../../components/right-panel/RightPanelSkeleton";
-import messageApi from "@/api/message/message";
-import searchApi from "@/api/message/search";
+import messageApi from "../../../../api/message/message";
+import searchApi from "../../../../api/message/search";
 
 const LeftSidebar = () => {
   // State management.

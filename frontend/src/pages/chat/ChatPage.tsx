@@ -1,16 +1,16 @@
-import ChatArea from "@/components/chat/chat-area/ChatArea";
-import LeftSidebar from "@/components/chat/left-panel/sidebar/LeftSidebar";
-import { useSelectConversation } from "@/hooks/useSelectConversation";
+import ChatArea from "../../components/chat/chat-area/ChatArea";
+import LeftSidebar from "../../components/chat/left-panel/sidebar/LeftSidebar";
+import { useSelectConversation } from "../../hooks/useSelectConversation";
 
 const ChatPage = () => {
   // Custom conversation hook.
-  const { selectedConversationId } = useSelectConversation();
+  const { selectedConversation } = useSelectConversation();
   return (
     <>
       <div className="flex flex-row w-full h-screen max-h-screen">
         <section
           className={`bg-left-panel w-full sm:w-1/2  md:w-1/2 lg:w-2/5 ${
-            selectedConversationId && "hidden"
+            selectedConversation?._id && "hidden"
           } lg:block`}
         >
           <LeftSidebar />
@@ -19,10 +19,12 @@ const ChatPage = () => {
         {/**message component**/}
         <section
           className={` w-full h-full lg:flex flex-col items-center justify-center ${
-            !selectedConversationId && "hidden"
+            !selectedConversation?._id && "hidden"
           }`}
         >
-          <ChatArea selectedConversationId={selectedConversationId} />
+          {selectedConversation && (
+            <ChatArea selectedConversation={selectedConversation} />
+          )}
         </section>
       </div>
     </>

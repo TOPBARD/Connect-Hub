@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "../../../shared/interface/User";
-import postActionApi from "@/api/posts/posts.action";
+import postActionApi from "../../../api/posts/posts.action";
 
 const CreatePost = () => {
   // State management

@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import {
-  Conversations,
-  MessagesWithParticipantData,
-} from "@/shared/interface/Chat";
+import { Conversations, Message } from "../../shared/interface/Chat";
 
 /**
  * Custom hook to fetch message data.
  */
 
-const messageApi = (selectedConversationId?: string) => {
+const messageApi = (participantId?: string) => {
   // Fetch all conversations
   const { data: conversations, isPending: loadingConversation } = useQuery<
     Conversations[]
@@ -35,9 +32,9 @@ const messageApi = (selectedConversationId?: string) => {
     queryKey: ["messages"],
     queryFn: async () => {
       try {
-        if (!selectedConversationId) return null;
-        const messageData = await axios.get<MessagesWithParticipantData>(
-          `/api/messages/${selectedConversationId}`
+        if (!participantId) return null;
+        const messageData = await axios.get<Message[]>(
+          `/api/messages/${participantId}`
         );
         return messageData.data;
       } catch (error) {

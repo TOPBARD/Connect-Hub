@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { BiLogOut } from "react-icons/bi";
 import { User } from "../../shared/interface/User";
 import { BsChatFill } from "react-icons/bs";
-import logoutUserApi from "@/api/auth/logout.user";
+import logoutUserApi from "../../api/auth/logout.user";
 
 const Sidebar = () => {
   // Fetch logout function from API.

@@ -1,10 +1,9 @@
+import { Conversations } from "../shared/interface/Chat";
 import { createContext, useContext, useState, ReactNode } from "react";
 
 interface SelectConversationType {
-  selectedConversationId: string;
-  participantId: string;
-  handleConversationSelect: (conversationId: string) => void;
-  handleParticipantSelect: (participantId: string) => void;
+  selectedConversation: Conversations | null;
+  handleConversationSelect: (conversation: Conversations | null) => void;
 }
 
 const SelectConversationContext = createContext<
@@ -18,27 +17,19 @@ interface SocketContextProviderProps {
 export const SelectConversationContextProvider = ({
   children,
 }: SocketContextProviderProps) => {
-  const [selectedConversationId, setSelectedConversationId] =
-    useState<string>("");
-  const [participantId, setParticipantId] = useState<string>("");
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversations | null>(null);
 
   // Handle conversation change
-  const handleConversationSelect = (conversationId: string) => {
-    setSelectedConversationId(conversationId);
-  };
-
-  // Handle participant select
-  const handleParticipantSelect = (participantId: string) => {
-    setParticipantId(participantId);
+  const handleConversationSelect = (conversation: Conversations | null) => {
+    setSelectedConversation(conversation);
   };
 
   return (
     <SelectConversationContext.Provider
       value={{
-        participantId,
-        selectedConversationId,
+        selectedConversation,
         handleConversationSelect,
-        handleParticipantSelect,
       }}
     >
       {children}

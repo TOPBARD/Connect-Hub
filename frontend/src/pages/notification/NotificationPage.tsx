@@ -6,7 +6,7 @@ import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import { NOTIFICATIONACTION } from "../../shared/enums/NotificationAction";
 import notificationApi from "../../api/notification/notification";
-import notificationActionApi from "@/api/notification/notification.action";
+import notificationActionApi from "../../api/notification/notification.action";
 
 const NotificationPage = () => {
   // Notification APIs
