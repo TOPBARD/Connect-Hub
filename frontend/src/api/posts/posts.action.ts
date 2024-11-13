@@ -77,12 +77,15 @@ const postActionApi = (post?: Posts) => {
     },
     onSuccess: (updatedLikes: String[]) => {
       queryClient.setQueryData(["posts"], (oldData: Posts[]) => {
-        return oldData.map((p) => {
-          if (p._id === post?._id) {
-            return { ...p, likes: updatedLikes };
-          }
-          return p;
-        });
+        return (
+          oldData.length > 0 &&
+          oldData.map((p) => {
+            if (p._id === post?._id) {
+              return { ...p, likes: updatedLikes };
+            }
+            return p;
+          })
+        );
       });
     },
     onError: (error) => {

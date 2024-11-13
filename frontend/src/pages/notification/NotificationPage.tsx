@@ -45,38 +45,40 @@ const NotificationPage = () => {
           <div className="text-center p-4 font-bold">No notifications 🤔</div>
         )}
         {/* Render notifications */}
-        {notifications?.map((notification) => (
-          <div className="border-b border-gray-700" key={notification?._id}>
-            <div className="flex gap-2 p-4">
-              {notification?.type === NOTIFICATIONACTION.FOLLOW && (
-                <FaUser className="w-7 h-7 text-primary" />
-              )}
-              {notification?.type === NOTIFICATIONACTION.LIKE && (
-                <FaHeart className="w-7 h-7 text-red-500" />
-              )}
-              <Link to={`/profile/${notification?.from?.username}`}>
-                <div className="avatar">
-                  <div className="w-8 rounded-full">
-                    <img
-                      src={
-                        notification?.from?.profileImg ||
-                        "/avatar-placeholder.png"
-                      }
-                    />
+        {notifications &&
+          notifications.length > 0 &&
+          notifications?.map((notification) => (
+            <div className="border-b border-gray-700" key={notification?._id}>
+              <div className="flex gap-2 p-4">
+                {notification?.type === NOTIFICATIONACTION.FOLLOW && (
+                  <FaUser className="w-7 h-7 text-primary" />
+                )}
+                {notification?.type === NOTIFICATIONACTION.LIKE && (
+                  <FaHeart className="w-7 h-7 text-red-500" />
+                )}
+                <Link to={`/profile/${notification?.from?.username}`}>
+                  <div className="avatar">
+                    <div className="w-8 rounded-full">
+                      <img
+                        src={
+                          notification?.from?.profileImg ||
+                          "/avatar-placeholder.png"
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1">
-                  <span className="font-bold">
-                    @{notification?.from?.username}
-                  </span>{" "}
-                  {notification.type === NOTIFICATIONACTION.FOLLOW
-                    ? "followed you"
-                    : "liked your post"}
-                </div>
-              </Link>
+                  <div className="flex gap-1">
+                    <span className="font-bold">
+                      @{notification?.from?.username}
+                    </span>{" "}
+                    {notification.type === NOTIFICATIONACTION.FOLLOW
+                      ? "followed you"
+                      : "liked your post"}
+                  </div>
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </>
   );

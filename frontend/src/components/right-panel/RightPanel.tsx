@@ -28,6 +28,8 @@ const RightPanel = () => {
             </>
           )}
           {!isSuggesting &&
+            suggestedUsers &&
+            suggestedUsers.length > 0 &&
             suggestedUsers?.map((user: User) => (
               <Link
                 to={`/profile/${user?.username}`}

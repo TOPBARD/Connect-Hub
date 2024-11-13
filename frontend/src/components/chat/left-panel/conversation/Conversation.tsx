@@ -23,6 +23,7 @@ const Conversation = ({
     <div>
       {/* map all conversations */}
       {conversations &&
+        conversations.length > 0 &&
         conversations.map((conv: Conversations) => {
           return (
             <div className="border-b border-gray-700" key={conv._id}>

@@ -43,9 +43,8 @@ const AllPosts = ({
       {/* Render posts when available */}
       {!isLoading && !isRefetching && posts && (
         <div>
-          {posts.map((post: Posts) => (
-            <Post key={post?._id} post={post} />
-          ))}
+          {posts.length > 0 &&
+            posts.map((post: Posts) => <Post key={post?._id} post={post} />)}
         </div>
       )}
     </>
