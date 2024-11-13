@@ -16,7 +16,8 @@ export default defineConfig({
     "process.env": process.env,
   },
   server: {
-    port: 3000,
+    host: "0.0.0.0",
+    port: +process.env.PORT! || 3000,
     proxy: {
       "/api": {
         target: `${process.env.BACKEND_URL}`,
