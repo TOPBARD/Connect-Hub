@@ -5,11 +5,11 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./src/routes/user.route";
 import authRoutes from "./src/routes/auth.route";
 import postRoutes from "./src/routes/post.route";
+import cors from "cors";
 import notificationRoutes from "./src/routes/notification.route";
 import messageRoutes from "./src/routes/message.route";
 import { Response, Request } from "express";
 import { app, server } from "./src/socket/socket";
-import cors from "cors";
 
 dotenv.config();
 connectDB();

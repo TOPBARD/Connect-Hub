@@ -18,19 +18,24 @@ const loginUserApi = () => {
   } = useMutation({
     mutationFn: async (formData: LoginDataProps) => {
       try {
-        await axios.post<User>("/api/auth/login", formData);
+        const loginUser = await axios.post(
+          `${process.env.BACKEND_URL}/api/auth/login`,
+          formData
+        );
+        return loginUser.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           throw toast.error(`${error.response.data.error}`);
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (userData: User) => {
       toast.success("Login Successful");
+      localStorage.setItem("jwtAuthToken", userData.token as string);
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
-  
+
   return { loginMutation, isPending, isError };
 };
 

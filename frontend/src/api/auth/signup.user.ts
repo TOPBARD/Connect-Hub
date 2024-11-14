@@ -18,7 +18,10 @@ const signupUserApi = () => {
   } = useMutation({
     mutationFn: async (formData: RegisterDataProps) => {
       try {
-        await axios.post<User>("/api/auth/signup", formData);
+        await axios.post<User>(
+          `${process.env.BACKEND_URL}/api/auth/signup`,
+          formData
+        );
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           throw toast.error(`${error.response.data.error}`);

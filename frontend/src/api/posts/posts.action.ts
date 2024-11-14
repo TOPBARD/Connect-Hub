@@ -8,6 +8,7 @@ import { CreatePost, Posts } from "../../shared/interface/Post";
  */
 
 const postActionApi = (post?: Posts) => {
+  const token = localStorage.getItem("jwtAuthToken");
   const queryClient = useQueryClient();
 
   // Create post
@@ -18,7 +19,15 @@ const postActionApi = (post?: Posts) => {
   } = useMutation({
     mutationFn: async (postData: CreatePost) => {
       try {
-        const createdPost = await axios.post("/api/posts/create", postData);
+        const createdPost = await axios.post(
+          `${process.env.BACKEND_URL}/api/posts/create`,
+          postData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return createdPost.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -44,8 +53,13 @@ const postActionApi = (post?: Posts) => {
     }) => {
       try {
         const commentPostData = await axios.post(
-          `/api/posts/comment/${postId}`,
-          { text: comment }
+          `${process.env.BACKEND_URL}/api/posts/comment/${postId}`,
+          { text: comment },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return commentPostData.data;
       } catch (error) {
@@ -67,7 +81,15 @@ const postActionApi = (post?: Posts) => {
   const { mutate: likePost, isPending: isLiking } = useMutation({
     mutationFn: async (postId: string) => {
       try {
-        const likePostData = await axios.post(`/api/posts/like/${postId}`);
+        const likePostData = await axios.post(
+          `${process.env.BACKEND_URL}/api/posts/like/${postId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return likePostData.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -97,7 +119,14 @@ const postActionApi = (post?: Posts) => {
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: async (postId: string) => {
       try {
-        const deletePostData = await axios.delete(`/api/posts/${postId}`);
+        const deletePostData = await axios.delete(
+          `${process.env.BACKEND_URL}/api/posts/${postId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return deletePostData.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {

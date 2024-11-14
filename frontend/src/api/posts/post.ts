@@ -7,6 +7,7 @@ import { Posts } from "../../shared/interface/Post";
  */
 
 const postApi = (POST_ENDPOINT?: string) => {
+  const token = localStorage.getItem("jwtAuthToken");
   const {
     data: posts,
     isLoading,
@@ -16,7 +17,11 @@ const postApi = (POST_ENDPOINT?: string) => {
     queryKey: ["posts"],
     queryFn: async () => {
       try {
-        const postData = await axios.get(POST_ENDPOINT as string);
+        const postData = await axios.get(POST_ENDPOINT as string, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         return postData.data;
       } catch (error) {
         throw new Error();

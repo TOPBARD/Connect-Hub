@@ -12,4 +12,5 @@ export interface User {
   likedPost?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  token?: string;
 }

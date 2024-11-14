@@ -11,6 +11,7 @@ import {
  */
 
 const profileActionApi = () => {
+  const token = localStorage.getItem("jwtAuthToken");
   const queryClient = useQueryClient();
 
   // Update profile image
@@ -19,8 +20,13 @@ const profileActionApi = () => {
       mutationFn: async (imageObj: UpdateUserImgProps) => {
         try {
           const udpateProfileImage = await axios.post(
-            `/api/users/update/image`,
-            imageObj
+            `${process.env.BACKEND_URL}/api/users/update/image`,
+            imageObj,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           return udpateProfileImage.data;
         } catch (error) {
@@ -50,8 +56,13 @@ const profileActionApi = () => {
     mutationFn: async (formData: UpdateProfileProps) => {
       try {
         const udpateProfile = await axios.post(
-          `/api/users/update/profile`,
-          formData
+          `${process.env.BACKEND_URL}/api/users/update/profile`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return udpateProfile.data;
       } catch (error) {
@@ -77,7 +88,14 @@ const profileActionApi = () => {
   const { mutate: follow, isPending } = useMutation({
     mutationFn: async (userId: string) => {
       try {
-        await axios.post(`/api/users/follow/${userId}`);
+        await axios.post(
+          `${process.env.BACKEND_URL}/api/users/follow/${userId}`,{},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return;
       } catch (error) {
         throw new Error();

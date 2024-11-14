@@ -95,7 +95,7 @@ const loginUser = async (req: Request, res: Response): Promise<Response> => {
       return res.status(400).json({ error: "Invalid username or password" });
 
     // Generate JWT token and set it as a cookie
-    generateTokenAndSetCookie(user.id, res);
+    const token = generateTokenAndSetCookie(user.id, res);
 
     return res.status(200).json({
       _id: user._id,
@@ -109,6 +109,7 @@ const loginUser = async (req: Request, res: Response): Promise<Response> => {
       bio: user.bio,
       profileImg: user.profileImg,
       coverImg: user.coverImg,
+      token: token,
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });

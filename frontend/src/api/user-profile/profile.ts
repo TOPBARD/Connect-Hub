@@ -7,6 +7,7 @@ import { User } from "../../shared/interface/User";
  */
 
 const profileApi = (username?: string) => {
+  const token = localStorage.getItem("jwtAuthToken");
   // Fetch profile data with username
   const {
     data: user,
@@ -17,7 +18,14 @@ const profileApi = (username?: string) => {
     queryKey: ["userProfile", username],
     queryFn: async () => {
       try {
-        const userData = await axios.get(`/api/users/profile/${username}`);
+        const userData = await axios.get(
+          `${process.env.BACKEND_URL}/api/users/profile/${username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return userData.data;
       } catch (error) {
         throw new Error();
@@ -31,7 +39,14 @@ const profileApi = (username?: string) => {
     queryKey: ["suggestedUsers"],
     queryFn: async () => {
       try {
-        const suggestedUserData = await axios.get("/api/users/suggested");
+        const suggestedUserData = await axios.get(
+          `${process.env.BACKEND_URL}/api/users/suggested`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return suggestedUserData.data;
       } catch (error) {
         throw new Error();

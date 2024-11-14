@@ -12,7 +12,7 @@ const logoutUserApi = () => {
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
       try {
-        await axios.post("/api/auth/logout");
+        await axios.post(`${process.env.BACKEND_URL}/api/auth/logout`);
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           throw toast.error(`${error.response.data.error}`);

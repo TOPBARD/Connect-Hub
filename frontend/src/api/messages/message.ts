@@ -7,6 +7,7 @@ import { Conversations, Message } from "../../shared/interface/Chat";
  */
 
 const messageApi = (participantId?: string) => {
+  const token = localStorage.getItem("jwtAuthToken");
   // Fetch all conversations
   const { data: conversations, isPending: loadingConversation } = useQuery<
     Conversations[]
@@ -14,7 +15,14 @@ const messageApi = (participantId?: string) => {
     queryKey: ["conversations"],
     queryFn: async () => {
       try {
-        const conversationData = await axios.get("/api/messages/conversations");
+        const conversationData = await axios.get(
+          `${process.env.BACKEND_URL}/api/messages/conversations`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return conversationData.data;
       } catch (error) {
         throw new Error();
@@ -34,7 +42,12 @@ const messageApi = (participantId?: string) => {
       try {
         if (!participantId) return null;
         const messageData = await axios.get<Message[]>(
-          `/api/messages/${participantId}`
+          `${process.env.BACKEND_URL}/api/messages/${participantId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return messageData.data;
       } catch (error) {

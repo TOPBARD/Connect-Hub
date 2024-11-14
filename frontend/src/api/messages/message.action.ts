@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { Conversations, Message, MessageData } from "../../shared/interface/Chat";
+import {
+  Conversations,
+  Message,
+  MessageData,
+} from "../../shared/interface/Chat";
 import { useSelectConversation } from "../../hooks/useSelectConversation";
 
 /**
@@ -9,6 +13,7 @@ import { useSelectConversation } from "../../hooks/useSelectConversation";
  */
 
 const messageActionApi = (participantId: string) => {
+  const token = localStorage.getItem("jwtAuthToken");
   const { handleConversationSelect } = useSelectConversation();
   const queryClient = useQueryClient();
 
@@ -21,8 +26,13 @@ const messageActionApi = (participantId: string) => {
     mutationFn: async (messageData: MessageData) => {
       try {
         const response = await axios.post(
-          `/api/messages/${participantId}`,
-          messageData
+          `${process.env.BACKEND_URL}/api/messages/${participantId}`,
+          messageData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return response.data;
       } catch (error) {
@@ -65,8 +75,13 @@ const messageActionApi = (participantId: string) => {
     mutationFn: async (isMock: boolean) => {
       try {
         const newConversation = await axios.post(
-          `/api/messages/mock/${participantId}`,
-          { isMock }
+          `${process.env.BACKEND_URL}/api/messages/mock/${participantId}`,
+          { isMock },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return newConversation.data;
       } catch (error) {

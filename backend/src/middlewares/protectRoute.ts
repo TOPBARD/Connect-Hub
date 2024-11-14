@@ -17,7 +17,8 @@ const protectRoute = async (
 ): Promise<Response | void> => {
   try {
     // Retrieve the JWT from the cookies
-    const token: string = req?.cookies?.jwtAuthToken;
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }

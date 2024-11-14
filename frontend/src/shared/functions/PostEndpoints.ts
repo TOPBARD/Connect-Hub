@@ -8,14 +8,14 @@ export const getPostEndpoint = (
 ) => {
   switch (feedType) {
     case FEEDTYPE.ALL:
-      return "/api/posts/all";
+      return `${process.env.BACKEND_URL}/api/posts/all`;
     case FEEDTYPE.FOLLOWING:
-      return "/api/posts/followers";
+      return `${process.env.BACKEND_URL}/api/posts/followers`;
     case FEEDTYPE.PERSONAL:
-      return `/api/posts/user/${username}`;
+      return `${process.env.BACKEND_URL}/api/posts/user/${username}`;
     case FEEDTYPE.LIKED:
-      return `/api/posts/liked/${userId}`;
+      return `${process.env.BACKEND_URL}/api/posts/liked/${userId}`;
     default:
-      return "/api/posts/all";
+      return `${process.env.BACKEND_URL}/api/posts/all`;
   }
 };

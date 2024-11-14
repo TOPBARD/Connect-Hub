@@ -7,6 +7,7 @@ import { User } from "../../shared/interface/User";
  */
 
 const searchApi = (search: string) => {
+  const token = localStorage.getItem("jwtAuthToken");
   const {
     data: searchUser,
     refetch,
@@ -17,7 +18,12 @@ const searchApi = (search: string) => {
       try {
         if (!search) return null;
         const searchUser = await axios.get<User[]>(
-          `/api/users/search/${search}`
+          `${process.env.BACKEND_URL}/api/users/search/${search}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         return searchUser.data;
       } catch (error) {

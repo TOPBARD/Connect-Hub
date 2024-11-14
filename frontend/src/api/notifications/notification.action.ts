@@ -7,12 +7,20 @@ import toast from "react-hot-toast";
  */
 
 const notificationActionApi = () => {
+  const token = localStorage.getItem("jwtAuthToken");
   const queryClient = useQueryClient();
 
   const { mutate: deleteNotifications } = useMutation({
     mutationFn: async () => {
       try {
-        const deleteNotidiaction = await axios.delete("/api/notifications");
+        const deleteNotidiaction = await axios.delete(
+          `${process.env.BACKEND_URL}/api/notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return deleteNotidiaction.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {

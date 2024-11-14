@@ -7,11 +7,19 @@ import { Notification } from "../../shared/interface/Notification";
  */
 
 const notificationApi = () => {
+  const token = localStorage.getItem("jwtAuthToken");
   const { data: notifications, isLoading } = useQuery<Notification[]>({
     queryKey: ["notifications"],
     queryFn: async () => {
       try {
-        const notifications = await axios.get("/api/notifications");
+        const notifications = await axios.get(
+          `${process.env.BACKEND_URL}/api/notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         return notifications.data;
       } catch (error) {
         throw new Error();
