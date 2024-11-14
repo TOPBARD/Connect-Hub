@@ -21,6 +21,7 @@ const logoutUserApi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      localStorage.removeItem("jwtAuthToken");
       toast.success("Logged out successfully");
     },
     onError: () => {
