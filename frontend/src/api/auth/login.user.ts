@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { User } from "../../shared/interface/User";
 import { LoginDataProps } from "../../shared/interface/AuthData";
 
 /**
@@ -22,6 +21,7 @@ const loginUserApi = () => {
           `${process.env.BACKEND_URL}/api/auth/login`,
           formData
         );
+        localStorage.setItem("jwtAuthToken", loginUser.data.token as string);
         return loginUser.data;
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -29,10 +29,10 @@ const loginUserApi = () => {
         }
       }
     },
-    onSuccess: (userData: User) => {
+    onSuccess: () => {
       toast.success("Login Successful");
-      localStorage.setItem("jwtAuthToken", userData.token as string);
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      queryClient.fetchQuery({ queryKey: ["authUser"] });
+      window.location.reload();
     },
   });
 

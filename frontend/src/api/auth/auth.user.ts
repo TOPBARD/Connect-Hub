@@ -26,6 +26,7 @@ const getUserApi = () => {
         return null;
       }
     },
+    enabled: !!token,
     retry: false,
   });
 

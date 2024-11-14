@@ -13,6 +13,7 @@ const logoutUserApi = () => {
     mutationFn: async () => {
       try {
         await axios.post(`${process.env.BACKEND_URL}/api/auth/logout`);
+        localStorage.removeItem("jwtAuthToken");
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           throw toast.error(`${error.response.data.error}`);
@@ -20,9 +21,9 @@ const logoutUserApi = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      localStorage.removeItem("jwtAuthToken");
       toast.success("Logged out successfully");
+      queryClient.refetchQueries({ queryKey: ["authUser"] });
+      window.location.reload();
     },
     onError: () => {
       toast.error("Logout failed");
